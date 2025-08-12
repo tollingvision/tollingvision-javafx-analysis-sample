@@ -63,7 +63,7 @@ bin/
 # Application specific
 ## User configuration
 config.json
-~/.tollingvision-client/
+.tollingvision-client/
 
 ## Exported files
 *.css

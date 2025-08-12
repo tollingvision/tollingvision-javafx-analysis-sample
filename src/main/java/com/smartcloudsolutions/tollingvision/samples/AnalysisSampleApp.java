@@ -67,6 +67,11 @@ public class AnalysisSampleApp extends Application {
         mainScreen.setOnStartProcessing(this::startProcessing);
         mainScreen.setOnStopProcessing(this::stopProcessing);
 
+        // Set up application close handler to save configuration
+        primaryStage.setOnCloseRequest(event -> {
+            mainScreen.saveConfiguration();
+        });
+
         // Show the main screen
         mainScreen.show();
     }
@@ -97,6 +102,10 @@ public class AnalysisSampleApp extends Application {
 
     private void startProcessing() {
         stopRequested = false; // Reset stop flag
+        
+        // Save current configuration before starting processing
+        mainScreen.saveConfiguration();
+        
         mainScreen.processingProperty().set(true);
         mainScreen.getLogItems().clear();
         resetCounters();

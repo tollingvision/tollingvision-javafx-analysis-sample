@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
 import com.smartcloudsolutions.tollingvision.samples.model.ImageGroupResult;
+import com.smartcloudsolutions.tollingvision.samples.model.UserConfiguration;
+import com.smartcloudsolutions.tollingvision.samples.util.ConfigurationManager;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -48,6 +50,7 @@ public class MainScreen {
 
     private final ResourceBundle messages;
     private final Stage primaryStage;
+    private final ConfigurationManager configManager;
 
     // Configuration fields
     private final TextField dirField = new TextField();
@@ -93,9 +96,12 @@ public class MainScreen {
     public MainScreen(Stage primaryStage, ResourceBundle messages) {
         this.primaryStage = primaryStage;
         this.messages = messages;
+        this.configManager = new ConfigurationManager();
 
         initializeUI();
         setupEventHandlers();
+        loadConfiguration();
+        setupConfigurationAutoSave();
     }
 
     private void initializeUI() {
@@ -632,5 +638,85 @@ public class MainScreen {
      */
     public void show() {
         primaryStage.show();
+    }
+    
+    /**
+     * Loads user configuration from the persistent storage and applies it to the UI.
+     */
+    private void loadConfiguration() {
+        try {
+            UserConfiguration config = configManager.loadConfiguration();
+            applyConfiguration(config);
+        } catch (Exception e) {
+            System.err.println("Failed to load configuration: " + e.getMessage());
+            // Continue with default values already set in UI
+        }
+    }
+    
+    /**
+     * Saves the current UI configuration to persistent storage.
+     */
+    public void saveConfiguration() {
+        try {
+            UserConfiguration config = getCurrentConfiguration();
+            configManager.saveConfiguration(config);
+        } catch (Exception e) {
+            System.err.println("Failed to save configuration: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Applies a configuration to the UI fields.
+     * 
+     * @param config the configuration to apply
+     */
+    private void applyConfiguration(UserConfiguration config) {
+        dirField.setText(config.getInputFolder());
+        urlField.setText(config.getServiceUrl());
+        tlsCheck.setSelected(config.isTlsEnabled());
+        insecureCheck.setSelected(config.isInsecureAllowed());
+        csvField.setText(config.getCsvOutput());
+        maxParSpin.getValueFactory().setValue(config.getMaxParallel());
+        groupPatternField.setText(config.getGroupPattern());
+        frontPatternField.setText(config.getFrontPattern());
+        rearPatternField.setText(config.getRearPattern());
+        overviewPatternField.setText(config.getOverviewPattern());
+    }
+    
+    /**
+     * Creates a configuration object from the current UI field values.
+     * 
+     * @return the current configuration
+     */
+    private UserConfiguration getCurrentConfiguration() {
+        return UserConfiguration.newBuilder()
+                .setInputFolder(dirField.getText())
+                .setServiceUrl(urlField.getText())
+                .setTlsEnabled(tlsCheck.isSelected())
+                .setInsecureAllowed(insecureCheck.isSelected())
+                .setCsvOutput(csvField.getText())
+                .setMaxParallel(maxParSpin.getValue())
+                .setGroupPattern(groupPatternField.getText())
+                .setFrontPattern(frontPatternField.getText())
+                .setRearPattern(rearPatternField.getText())
+                .setOverviewPattern(overviewPatternField.getText())
+                .build();
+    }
+    
+    /**
+     * Sets up automatic configuration saving when fields change.
+     */
+    private void setupConfigurationAutoSave() {
+        // Add listeners to save configuration when fields change
+        dirField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        urlField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        tlsCheck.selectedProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        insecureCheck.selectedProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        csvField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        maxParSpin.valueProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        groupPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        frontPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        rearPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        overviewPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
     }
 }
