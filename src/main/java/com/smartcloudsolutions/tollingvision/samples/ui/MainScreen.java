@@ -37,7 +37,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -91,7 +90,7 @@ public class MainScreen {
      * Creates a new MainScreen with the specified stage and resource bundle.
      * 
      * @param primaryStage the primary stage for the application
-     * @param messages resource bundle for internationalization
+     * @param messages     resource bundle for internationalization
      */
     public MainScreen(Stage primaryStage, ResourceBundle messages) {
         this.primaryStage = primaryStage;
@@ -639,9 +638,10 @@ public class MainScreen {
     public void show() {
         primaryStage.show();
     }
-    
+
     /**
-     * Loads user configuration from the persistent storage and applies it to the UI.
+     * Loads user configuration from the persistent storage and applies it to the
+     * UI.
      */
     private void loadConfiguration() {
         try {
@@ -652,7 +652,7 @@ public class MainScreen {
             // Continue with default values already set in UI
         }
     }
-    
+
     /**
      * Saves the current UI configuration to persistent storage.
      */
@@ -664,7 +664,7 @@ public class MainScreen {
             System.err.println("Failed to save configuration: " + e.getMessage());
         }
     }
-    
+
     /**
      * Applies a configuration to the UI fields.
      * 
@@ -682,7 +682,7 @@ public class MainScreen {
         rearPatternField.setText(config.getRearPattern());
         overviewPatternField.setText(config.getOverviewPattern());
     }
-    
+
     /**
      * Creates a configuration object from the current UI field values.
      * 
@@ -702,7 +702,7 @@ public class MainScreen {
                 .setOverviewPattern(overviewPatternField.getText())
                 .build();
     }
-    
+
     /**
      * Sets up automatic configuration saving when fields change.
      */

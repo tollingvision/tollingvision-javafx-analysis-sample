@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.smartcloudsolutions.tollingvision.EventRequest;
 import com.smartcloudsolutions.tollingvision.EventResult;
 import com.smartcloudsolutions.tollingvision.SearchResponse;
 
@@ -29,25 +28,22 @@ public class ImageGroupResult {
     private final String mmr;
     private final String mmrAlt;
     private final List<Path> allImagePaths;
-    private final EventRequest eventRequest;
     private final EventResult eventResult;
     private final Map<Path, SearchResponse> imageAnalysisData;
 
     /**
      * Constructor for real analysis result.
      * 
-     * @param bucket bucket identifier
-     * @param eventRequest the original event request
-     * @param eventResult the analysis result
-     * @param imagePaths list of image paths
-     * @param frontPattern pattern for front images
-     * @param rearPattern pattern for rear images
+     * @param bucket          bucket identifier
+     * @param eventResult     the analysis result
+     * @param imagePaths      list of image paths
+     * @param frontPattern    pattern for front images
+     * @param rearPattern     pattern for rear images
      * @param overviewPattern pattern for overview images
      */
-    public ImageGroupResult(String bucket, EventRequest eventRequest, EventResult eventResult, List<Path> imagePaths,
+    public ImageGroupResult(String bucket, EventResult eventResult, List<Path> imagePaths,
             String frontPattern, String rearPattern, String overviewPattern) {
         this.bucket = bucket;
-        this.eventRequest = eventRequest;
         this.eventResult = eventResult;
         this.allImagePaths = imagePaths;
 
@@ -80,7 +76,7 @@ public class ImageGroupResult {
     /**
      * Constructor for log entries.
      * 
-     * @param bucket bucket identifier
+     * @param bucket  bucket identifier
      * @param message log message
      */
     public ImageGroupResult(String bucket, String message) {
@@ -95,7 +91,6 @@ public class ImageGroupResult {
         this.mmr = "";
         this.mmrAlt = "";
         this.allImagePaths = Collections.emptyList();
-        this.eventRequest = null;
         this.eventResult = null;
         this.imageAnalysisData = new HashMap<>();
     }
@@ -201,15 +196,6 @@ public class ImageGroupResult {
     }
 
     /**
-     * Gets the original event request.
-     * 
-     * @return the event request
-     */
-    public EventRequest getEventRequest() {
-        return eventRequest;
-    }
-
-    /**
      * Gets the event result.
      * 
      * @return the event result
@@ -230,7 +216,7 @@ public class ImageGroupResult {
     /**
      * Adds individual image analysis data.
      * 
-     * @param imagePath the image path
+     * @param imagePath      the image path
      * @param searchResponse the SearchResponse data for this image
      */
     public void addImageAnalysis(Path imagePath, SearchResponse searchResponse) {

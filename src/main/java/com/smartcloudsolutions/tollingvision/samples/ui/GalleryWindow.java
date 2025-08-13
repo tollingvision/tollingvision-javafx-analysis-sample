@@ -20,7 +20,9 @@ import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -70,6 +72,8 @@ public class GalleryWindow {
         this.galleryStage = new Stage(StageStyle.DECORATED);
         this.galleryStage.setTitle(messages.getString("gallery.title") + " - " + result.getBucket());
         this.galleryStage.initModality(Modality.APPLICATION_MODAL);
+        this.galleryStage.setMinWidth(1200);
+        this.galleryStage.setMinHeight(900);
 
         initializeUI();
         setupKeyboardHandling();
@@ -88,7 +92,7 @@ public class GalleryWindow {
         root.getStyleClass().add("gallery-root");
 
         // Enhanced summary section with 50/50 two-column layout
-        HBox summary = createEnhancedSummarySection();
+        GridPane summary = createEnhancedSummarySection();
         root.setTop(summary);
 
         // Thumbnail strip (left)
@@ -104,7 +108,7 @@ public class GalleryWindow {
         root.setCenter(imageSection);
 
         // Create scene
-        Scene scene = new Scene(root, 1400, 900);
+        Scene scene = new Scene(root, galleryStage.getWidth(), galleryStage.getHeight());
         galleryStage.setScene(scene);
     }
 
@@ -134,6 +138,8 @@ public class GalleryWindow {
                         event.consume();
                     }
                     break;
+                default:
+                    break;
             }
         });
     }
@@ -141,11 +147,16 @@ public class GalleryWindow {
     /**
      * Creates the enhanced summary section with 50/50 two-column layout.
      * 
-     * @return HBox containing the summary section
+     * @return GridPane containing the summary section
      */
-    private HBox createEnhancedSummarySection() {
-        HBox summarySection = new HBox(20);
-        summarySection.setPadding(new Insets(20));
+    private GridPane createEnhancedSummarySection() {
+        GridPane summarySection = new GridPane();
+        ColumnConstraints cc = new ColumnConstraints();
+        cc.setPercentWidth(50);
+        summarySection.getColumnConstraints().add(cc);
+        summarySection.getColumnConstraints().add(cc);
+        summarySection.setPadding(new Insets(15));
+        summarySection.setHgap(20);
         summarySection.setAlignment(Pos.CENTER_LEFT);
         summarySection.getStyleClass().add("gallery-summary");
 
@@ -153,11 +164,13 @@ public class GalleryWindow {
         VBox anprMmrColumn = createAnprMmrColumn(result);
         HBox.setHgrow(anprMmrColumn, Priority.ALWAYS);
         anprMmrColumn.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setConstraints(anprMmrColumn, 0, 0);
 
         // Analysis Data Column (50% width)
         VBox analysisColumn = createAnalysisDataColumn();
         HBox.setHgrow(analysisColumn, Priority.ALWAYS);
         analysisColumn.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setConstraints(analysisColumn, 1, 0);
 
         summarySection.getChildren().addAll(anprMmrColumn, analysisColumn);
         return summarySection;
@@ -170,14 +183,14 @@ public class GalleryWindow {
      * @return VBox containing ANPR and MMR data
      */
     private VBox createAnprMmrColumn(ImageGroupResult result) {
-        VBox column = new VBox(20);
+        VBox column = new VBox(15);
         column.getStyleClass().add("gallery-sidebar");
         column.setPadding(new Insets(15));
         column.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8px;");
         // Make the column fill available space
         VBox.setVgrow(column, Priority.ALWAYS);
 
-        Label titleLabel = new Label("Event Summary");
+        Label titleLabel = new Label(messages.getString("gallery.summary.title"));
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
 
         // ANPR Summary - compact single line format
@@ -188,41 +201,27 @@ public class GalleryWindow {
             anprSection.getChildren().add(anprTitle);
 
             if (!result.getFrontPlate().isEmpty()) {
-                String frontPlateInfo = result.getFrontPlate();
-                String plateText = extractPlateText(frontPlateInfo);
-                String jurisdiction = extractJurisdiction(frontPlateInfo);
-                String category = extractCategory(frontPlateInfo);
-                String confidence = extractConfidence(frontPlateInfo);
-
-                // Compact single line format
-                StringBuilder frontLine = new StringBuilder("Front: " + plateText);
-                if (!jurisdiction.isEmpty())
-                    frontLine.append(" | ").append(jurisdiction);
-                if (!category.isEmpty())
-                    frontLine.append(" | ").append(category);
-                if (!confidence.isEmpty())
-                    frontLine.append(" | ").append(confidence);
-
-                anprSection.getChildren().add(new Label(frontLine.toString()));
+                String frontLine = buildPlateLine(result.getEventResult().getFrontPlate());
+                anprSection.getChildren()
+                        .add(new Label(messages.getString("gallery.plate.front").replace("{0}", frontLine)));
+                for (var plateAlt : result.getEventResult().getFrontPlateAlternativeList()) {
+                    String plateAltLine = buildPlateLine(plateAlt);
+                    if (plateAltLine.length() > 0) {
+                        anprSection.getChildren().add(new Label(" • " + plateAltLine));
+                    }
+                }
             }
 
             if (!result.getRearPlate().isEmpty()) {
-                String rearPlateInfo = result.getRearPlate();
-                String plateText = extractPlateText(rearPlateInfo);
-                String jurisdiction = extractJurisdiction(rearPlateInfo);
-                String category = extractCategory(rearPlateInfo);
-                String confidence = extractConfidence(rearPlateInfo);
-
-                // Compact single line format
-                StringBuilder rearLine = new StringBuilder("Rear: " + plateText);
-                if (!jurisdiction.isEmpty())
-                    rearLine.append(" | ").append(jurisdiction);
-                if (!category.isEmpty())
-                    rearLine.append(" | ").append(category);
-                if (!confidence.isEmpty())
-                    rearLine.append(" | ").append(confidence);
-
-                anprSection.getChildren().add(new Label(rearLine.toString()));
+                String rearLine = buildPlateLine(result.getEventResult().getRearPlate());
+                anprSection.getChildren()
+                        .add(new Label(messages.getString("gallery.plate.rear").replace("{0}", rearLine)));
+                for (var plateAlt : result.getEventResult().getRearPlateAlternativeList()) {
+                    String plateAltLine = buildPlateLine(plateAlt);
+                    if (plateAltLine.length() > 0) {
+                        anprSection.getChildren().add(new Label(" • " + plateAltLine));
+                    }
+                }
             }
             column.getChildren().add(anprSection);
         }
@@ -237,47 +236,15 @@ public class GalleryWindow {
             // Format: <make> <model> <variation> <generation> | <category> (<body type>)
             if (result.getEventResult() != null && result.getEventResult().hasMmr()) {
                 var mmr = result.getEventResult().getMmr();
-                StringBuilder mmrLine = new StringBuilder();
-
-                // Build the main part: <make> <model> <variation> <generation>
-                if (!mmr.getMake().isEmpty()) {
-                    mmrLine.append(mmr.getMake());
-                }
-                if (!mmr.getModel().isEmpty()) {
-                    if (mmrLine.length() > 0)
-                        mmrLine.append(" ");
-                    mmrLine.append(mmr.getModel());
-                }
-                // Note: variation field might not exist in proto, using generation for now
-                if (!mmr.getGeneration().isEmpty()) {
-                    if (mmrLine.length() > 0)
-                        mmrLine.append(" ");
-                    mmrLine.append(mmr.getGeneration());
-                }
-
-                // Add the separator and category/body type part
-                boolean hasCategory = !mmr.getCategory().isEmpty();
-                boolean hasBodyType = !mmr.getBodyType().isEmpty();
-
-                if (hasCategory || hasBodyType) {
-                    mmrLine.append(" | ");
-                    if (hasCategory) {
-                        mmrLine.append(mmr.getCategory());
-                    }
-                    if (hasBodyType) {
-                        mmrLine.append(" (").append(mmr.getBodyType()).append(")");
-                    }
-                }
-
+                String mmrLine = buildMmrLine(mmr);
                 if (mmrLine.length() > 0) {
-                    mmrSection.getChildren().add(new Label(mmrLine.toString()));
+                    mmrSection.getChildren().add(new Label(mmrLine));
                 }
-            } else {
-                // Fallback to parsing string format
-                String mmrData = result.getMmr();
-                String[] mmrParts = mmrData.split(" \\(");
-                if (mmrParts.length > 0) {
-                    mmrSection.getChildren().add(new Label("Make/Model: " + mmrParts[0]));
+                for (var mmrAlt : result.getEventResult().getMmrAlternativeList()) {
+                    String mmrAltLine = buildMmrLine(mmrAlt);
+                    if (mmrAltLine.length() > 0) {
+                        mmrSection.getChildren().add(new Label(" • " + mmrAltLine));
+                    }
                 }
             }
             column.getChildren().add(mmrSection);
@@ -285,6 +252,53 @@ public class GalleryWindow {
 
         column.getChildren().add(0, titleLabel);
         return column;
+    }
+
+    private String buildPlateLine(com.smartcloudsolutions.tollingvision.Plate plate) {
+        StringBuilder anprLine = new StringBuilder(plate.getText());
+        if (!plate.getCountry().isEmpty()) {
+            anprLine.append(" | ").append(plate.getCountry());
+        }
+        if (!plate.getCategory().isEmpty()) {
+            anprLine.append(" | ").append(plate.getCategory());
+        }
+        anprLine.append(" | ").append(plate.getConfidence() + "%");
+        return anprLine.toString();
+    }
+
+    private String buildMmrLine(com.smartcloudsolutions.tollingvision.Mmr mmr) {
+        StringBuilder mmrLine = new StringBuilder();
+
+        // Build the main part: <make> <model> <variation> <generation>
+        if (!mmr.getMake().isEmpty()) {
+            mmrLine.append(mmr.getMake());
+        }
+        if (!mmr.getModel().isEmpty()) {
+            if (mmrLine.length() > 0)
+                mmrLine.append(" ");
+            mmrLine.append(mmr.getModel());
+        }
+        // Note: variation field might not exist in proto, using generation for now
+        if (!mmr.getGeneration().isEmpty()) {
+            if (mmrLine.length() > 0)
+                mmrLine.append(" ");
+            mmrLine.append(mmr.getGeneration());
+        }
+
+        // Add the separator and category/body type part
+        boolean hasCategory = !mmr.getCategory().isEmpty();
+        boolean hasBodyType = !mmr.getBodyType().isEmpty();
+
+        if (hasCategory || hasBodyType) {
+            mmrLine.append(" | ");
+            if (hasCategory) {
+                mmrLine.append(mmr.getCategory());
+            }
+            if (hasBodyType) {
+                mmrLine.append(" (").append(mmr.getBodyType()).append(")");
+            }
+        }
+        return mmrLine.toString();
     }
 
     /**
@@ -310,7 +324,6 @@ public class GalleryWindow {
             // Use Protobuf JsonFormat for EventResult - no camelCase enforcement
             if (result.getEventResult() != null) {
                 String jsonString = JsonFormat.printer()
-                        .includingDefaultValueFields()
                         .print(result.getEventResult());
                 jsonTextArea.setText(jsonString);
             } else {
@@ -330,9 +343,9 @@ public class GalleryWindow {
      * @return VBox containing the thumbnail strip
      */
     private VBox createThumbnailSection() {
-        VBox thumbnailSection = new VBox(10);
-        thumbnailSection.setPadding(new Insets(15, 10, 15, 15)); // Reduce right padding for symmetrical margins
-        thumbnailSection.setPrefWidth(220); // Slightly wider to accommodate 6 thumbnails
+        VBox thumbnailSection = new VBox(15);
+        thumbnailSection.setPadding(new Insets(15, 0, 15, 15));
+        thumbnailSection.setPrefWidth(160);
         thumbnailSection.getStyleClass().add("gallery-sidebar");
 
         Label title = new Label("Image Gallery");
@@ -346,9 +359,9 @@ public class GalleryWindow {
         FlowPane thumbnailContainer = new FlowPane();
         thumbnailContainer.setHgap(6);
         thumbnailContainer.setVgap(6);
-        thumbnailContainer.setPadding(new Insets(5));
-        thumbnailContainer.setPrefWrapLength(220); // Wrap at container width
-        thumbnailContainer.setAlignment(Pos.CENTER_LEFT); // Align thumbnails to left for consistent layout
+        thumbnailContainer.setPadding(new Insets(15));
+        thumbnailContainer.setPrefWrapLength(160); // Wrap at container width
+        thumbnailContainer.setAlignment(Pos.CENTER); // Align thumbnails to center for consistent layout
 
         // Create thumbnails for all images
         for (int i = 0; i < images.size(); i++) {
@@ -411,7 +424,7 @@ public class GalleryWindow {
      */
     private VBox createImagePaginationSection() {
         VBox imageSection = new VBox(15);
-        imageSection.setPadding(new Insets(15));
+        imageSection.setPadding(new Insets(15, 0, 15, 0));
         imageSection.setAlignment(Pos.CENTER);
 
         // Add "Current Image" header
@@ -496,7 +509,8 @@ public class GalleryWindow {
      * Updates the clipping rectangle for the image container.
      */
     private void updateImageContainerClip() {
-        double width = fixedImageContainer.getPrefWidth();
+        double width = fixedImageContainer.getWidth() > 0 ? fixedImageContainer.getWidth()
+                : fixedImageContainer.getPrefWidth();
         double height = fixedImageContainer.getHeight() > 0 ? fixedImageContainer.getHeight()
                 : fixedImageContainer.getPrefHeight();
         javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle(width, height);
@@ -507,7 +521,8 @@ public class GalleryWindow {
      * Updates the canvas size to match the container.
      */
     private void updateCanvasSize() {
-        double width = fixedImageContainer.getPrefWidth();
+        double width = fixedImageContainer.getWidth() > 0 ? fixedImageContainer.getWidth()
+                : fixedImageContainer.getPrefWidth();
         double height = fixedImageContainer.getHeight() > 0 ? fixedImageContainer.getHeight()
                 : fixedImageContainer.getPrefHeight();
         overlayCanvas.setWidth(width);
@@ -607,15 +622,16 @@ public class GalleryWindow {
             return translation;
 
         // Get actual displayed image dimensions
-        double imageWidth = mainImageView.getImage().getWidth();
-        double imageHeight = mainImageView.getImage().getHeight();
+        double imageWidth = mainImageView.getFitWidth();
+        double imageHeight = mainImageView.getFitHeight();
 
         // Calculate scaled dimensions
         double scaledWidth = imageWidth * zoomFactor;
         double scaledHeight = imageHeight * zoomFactor;
 
         // Container dimensions
-        double containerWidth = fixedImageContainer.getPrefWidth();
+        double containerWidth = fixedImageContainer.getWidth() > 0 ? fixedImageContainer.getWidth()
+                : fixedImageContainer.getPrefWidth();
         double containerHeight = fixedImageContainer.getHeight() > 0 ? fixedImageContainer.getHeight()
                 : fixedImageContainer.getPrefHeight();
 
@@ -729,8 +745,8 @@ public class GalleryWindow {
     private VBox createCurrentImageDataSection() {
         VBox section = new VBox(15);
         section.getStyleClass().add("gallery-sidebar");
-        section.setPrefWidth(250);
-        section.setPadding(new Insets(15, 15, 20, 15)); // Add bottom padding for consistent spacing
+        section.setPrefWidth(240);
+        section.setPadding(new Insets(15, 15, 15, 0));
 
         Label title = new Label("Current Image Data");
         title.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
@@ -786,8 +802,7 @@ public class GalleryWindow {
         VBox section = new VBox(15);
         section.getStyleClass().add("gallery-sidebar");
         section.setPrefWidth(300); // Increased width for more data
-        section.setPadding(new Insets(15, 15, 25, 15)); // Add extra bottom padding so textarea doesn't touch window
-                                                        // bottom
+        section.setPadding(new Insets(15, 15, 15, 0));
 
         Label title = new Label("Current Image Data");
         title.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
@@ -808,7 +823,6 @@ public class GalleryWindow {
             if (searchResponse != null) {
                 // Use Protobuf JSON conversion instead of Jackson to avoid serialization issues
                 String jsonString = JsonFormat.printer()
-                        .includingDefaultValueFields()
                         .print(searchResponse); // Use default camelCase formatting to match Analysis Data
                 jsonArea.setText(jsonString);
             } else {
@@ -872,50 +886,6 @@ public class GalleryWindow {
             VBox newThumbnailSection = createThumbnailSection();
             root.setLeft(newThumbnailSection);
         }
-    }
-
-    // Helper methods for parsing plate data
-    private String extractPlateText(String plateInfo) {
-        if (plateInfo == null || plateInfo.isEmpty())
-            return "";
-        String[] parts = plateInfo.split(" ");
-        return parts.length > 0 ? parts[0] : "";
-    }
-
-    private String extractJurisdiction(String plateInfo) {
-        if (plateInfo == null || plateInfo.isEmpty())
-            return "";
-        String[] parts = plateInfo.split(" ");
-        for (String part : parts) {
-            if (part.contains("-")) {
-                return part;
-            }
-        }
-        return "";
-    }
-
-    private String extractCategory(String plateInfo) {
-        if (plateInfo == null || plateInfo.isEmpty())
-            return "";
-        String[] parts = plateInfo.split(" ");
-        for (String part : parts) {
-            if (!part.contains("-") && !part.contains("%") && !part.equals(parts[0])) {
-                return part;
-            }
-        }
-        return "";
-    }
-
-    private String extractConfidence(String plateInfo) {
-        if (plateInfo == null || plateInfo.isEmpty())
-            return "";
-        String[] parts = plateInfo.split(" ");
-        for (String part : parts) {
-            if (part.contains("%")) {
-                return part;
-            }
-        }
-        return "";
     }
 
     public void show() {

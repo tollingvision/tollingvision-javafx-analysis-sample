@@ -102,10 +102,10 @@ public class AnalysisSampleApp extends Application {
 
     private void startProcessing() {
         stopRequested = false; // Reset stop flag
-        
+
         // Save current configuration before starting processing
         mainScreen.saveConfiguration();
-        
+
         mainScreen.processingProperty().set(true);
         mainScreen.getLogItems().clear();
         resetCounters();
@@ -232,9 +232,7 @@ public class AnalysisSampleApp extends Application {
                                     @Override
                                     public void onCompleted() {
                                         if (eventResult != null && !stopRequested) {
-                                            ImageGroupResult result = new ImageGroupResult(bucket, eventRequest,
-                                                    eventResult,
-                                                    imgs,
+                                            ImageGroupResult result = new ImageGroupResult(bucket, eventResult, imgs,
                                                     patterns[1], patterns[2], patterns[3]);
 
                                             // Create SearchResponse data from EventResult for each image
@@ -302,7 +300,7 @@ public class AnalysisSampleApp extends Application {
         Files.walk(root).filter(Files::isRegularFile).forEach(f -> {
             Matcher m = pattern.matcher(f.getFileName().toString());
             if (m.find())
-                map.computeIfAbsent(m.group(), k -> new ArrayList<>()).add(f);
+                map.computeIfAbsent(m.group(1), k -> new ArrayList<>()).add(f);
         });
         return map;
     }
