@@ -1,6 +1,6 @@
 # TollingVision JavaFX Client
 
-A lightweight, cross-platform desktop application for batch processing vehicle images through AI analysis. Built with modern Java technologies and a fully modular architecture.
+A lightweight, cross-platform desktop application for batch processing vehicle images through [TollingVision](https://tollingvision.com)'s AI analysis. Built with modern Java technologies and a fully modular architecture.
 
 ## Overview
 
