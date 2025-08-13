@@ -49,6 +49,7 @@ public class AnalysisSampleApp extends Application {
     private volatile boolean stopRequested = false;
     private ManagedChannel currentChannel = null;
     private Task<Void> currentTask = null;
+    private BufferedWriter csvWriter = null;
 
     /**
      * Starts the JavaFX application and initializes the main screen.
@@ -79,6 +80,17 @@ public class AnalysisSampleApp extends Application {
     private void stopProcessing() {
         stopRequested = true;
         log("Stop requested - cancelling processing...");
+
+        // Immediately flush and close CSV writer
+        if (csvWriter != null) {
+            try {
+                csvWriter.flush();
+                csvWriter.close();
+                csvWriter = null;
+            } catch (IOException e) {
+                log("Error closing CSV writer: " + e.getMessage());
+            }
+        }
 
         // Cancel current task
         if (currentTask != null && !currentTask.isDone()) {
@@ -162,6 +174,9 @@ public class AnalysisSampleApp extends Application {
                     log(messages.getString("message.processing.start").replace("{0}", String.valueOf(total))
                             .replace("{1}", String.valueOf(maxPar)));
 
+                    // Initialize CSV writer and write header
+                    initializeCsvWriter(csvOut.toPath());
+
                     Semaphore sem = new Semaphore(maxPar);
                     CountDownLatch done = new CountDownLatch(total);
                     AtomicInteger cnt = new AtomicInteger();
@@ -240,6 +255,9 @@ public class AnalysisSampleApp extends Application {
                                             populateSearchResponseData(result,
                                                     eventRequest, eventResult, partialResults, imgs);
 
+                                            // Write CSV row immediately and flush
+                                            writeCsvRowIncremental(result);
+
                                             Platform.runLater(() -> {
                                                 mainScreen.getLogItems().add(result);
                                                 mainScreen.responsesOkProperty()
@@ -260,11 +278,18 @@ public class AnalysisSampleApp extends Application {
 
                     done.await();
 
-                    if (!stopRequested) {
-                        writeCsv(csvOut.toPath(), new ArrayList<>(mainScreen.getLogItems()));
-                        log(messages.getString("message.csv.saved").replace("{0}", csvOut.toString()));
-                    } else {
-                        log("Processing was stopped - CSV not saved");
+                    // Close CSV writer
+                    if (csvWriter != null) {
+                        try {
+                            csvWriter.flush();
+                            csvWriter.close();
+                            csvWriter = null;
+                            if (!stopRequested) {
+                                log(messages.getString("message.csv.saved").replace("{0}", csvOut.toString()));
+                            }
+                        } catch (IOException e) {
+                            log("Error closing CSV writer: " + e.getMessage());
+                        }
                     }
                 } catch (Exception ex) {
                     log("ERROR: " + ex.getMessage());
@@ -274,6 +299,17 @@ public class AnalysisSampleApp extends Application {
 
             @Override
             protected void done() {
+                // Ensure CSV writer is closed
+                if (csvWriter != null) {
+                    try {
+                        csvWriter.flush();
+                        csvWriter.close();
+                        csvWriter = null;
+                    } catch (IOException e) {
+                        log("Error closing CSV writer in done(): " + e.getMessage());
+                    }
+                }
+                
                 Platform.runLater(() -> {
                     mainScreen.processingProperty().set(false);
                     mainScreen.getProgressBar().progressProperty().unbind();
@@ -338,20 +374,44 @@ public class AnalysisSampleApp extends Application {
         return cnt == 0 ? null : b.build();
     }
 
-    private void writeCsv(Path out, List<ImageGroupResult> results) throws IOException {
-        try (BufferedWriter bw = Files.newBufferedWriter(out)) {
-            bw.write(
-                    "Bucket,Front Images,Rear Images,Overview Images,Front Plate,Front Plate Alt,Rear Plate,Rear Plate Alt,MMR,MMR Alt\n");
-            for (ImageGroupResult result : results) {
-                // Exclude any lines starting with [LOG] from CSV output
-                if (!result.getBucket().startsWith("[LOG]")) {
-                    bw.write(String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
-                            result.getBucket(), result.getFrontNames(), result.getRearNames(), result.getOverNames(),
-                            result.getFrontPlate(), result.getFrontAlt(), result.getRearPlate(), result.getRearAlt(),
-                            result.getMmr(), result.getMmrAlt()));
-                }
-            }
+    private void initializeCsvWriter(Path out) throws IOException {
+        // Create CSV writer and write header only once
+        csvWriter = Files.newBufferedWriter(out);
+        csvWriter.write("Bucket,Front Images,Rear Images,Overview Images,Front Plate,Front Jurisdiction,Front Plate Alt,Front Jurisdiction Alt,Rear Plate,Rear Jurisdiction,Rear Plate Alt,Rear Jurisdiction Alt,MMR,MMR Alt\n");
+        csvWriter.flush();
+    }
+
+    private synchronized void writeCsvRowIncremental(ImageGroupResult result) {
+        if (csvWriter == null || result.getBucket().startsWith("[LOG]")) {
+            return;
         }
+        
+        try {
+            csvWriter.write(String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
+                    escapeCSV(result.getBucket()), 
+                    escapeCSV(result.getFrontNames()), 
+                    escapeCSV(result.getRearNames()), 
+                    escapeCSV(result.getOverNames()),
+                    escapeCSV(result.getFrontPlate()), 
+                    escapeCSV(result.getFrontJurisdiction()),
+                    escapeCSV(result.getFrontAlt()), 
+                    escapeCSV(result.getFrontJurisdictionAlt()),
+                    escapeCSV(result.getRearPlate()), 
+                    escapeCSV(result.getRearJurisdiction()),
+                    escapeCSV(result.getRearAlt()),
+                    escapeCSV(result.getRearJurisdictionAlt()),
+                    escapeCSV(result.getMmr()), 
+                    escapeCSV(result.getMmrAlt())));
+            csvWriter.flush(); // Ensure data is durable on disk
+        } catch (IOException e) {
+            log("Error writing CSV row: " + e.getMessage());
+        }
+    }
+
+    private String escapeCSV(String value) {
+        if (value == null) return "";
+        // Escape quotes by doubling them
+        return value.replace("\"", "\"\"");
     }
 
     private void validate(File dir, File csv, String[] patterns) {

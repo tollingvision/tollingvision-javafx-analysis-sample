@@ -10,7 +10,7 @@ public class UserConfiguration {
     private String serviceUrl = "localhost:50051";
     private boolean tlsEnabled = true;
     private boolean insecureAllowed = false;
-    private String csvOutput = "";
+    private String csvDirectory = "";
     private int maxParallel = 4;
     private String groupPattern = "^.{7}";
     private String frontPattern = ".*front.*";
@@ -27,14 +27,14 @@ public class UserConfiguration {
      * Creates a new UserConfiguration with the specified values.
      */
     public UserConfiguration(String inputFolder, String serviceUrl, boolean tlsEnabled, 
-                           boolean insecureAllowed, String csvOutput, int maxParallel,
+                           boolean insecureAllowed, String csvDirectory, int maxParallel,
                            String groupPattern, String frontPattern, String rearPattern, 
                            String overviewPattern) {
         this.inputFolder = inputFolder;
         this.serviceUrl = serviceUrl;
         this.tlsEnabled = tlsEnabled;
         this.insecureAllowed = insecureAllowed;
-        this.csvOutput = csvOutput;
+        this.csvDirectory = csvDirectory;
         this.maxParallel = maxParallel;
         this.groupPattern = groupPattern;
         this.frontPattern = frontPattern;
@@ -47,7 +47,7 @@ public class UserConfiguration {
     public String getServiceUrl() { return serviceUrl; }
     public boolean isTlsEnabled() { return tlsEnabled; }
     public boolean isInsecureAllowed() { return insecureAllowed; }
-    public String getCsvOutput() { return csvOutput; }
+    public String getCsvDirectory() { return csvDirectory; }
     public int getMaxParallel() { return maxParallel; }
     public String getGroupPattern() { return groupPattern; }
     public String getFrontPattern() { return frontPattern; }
@@ -59,7 +59,7 @@ public class UserConfiguration {
     public void setServiceUrl(String serviceUrl) { this.serviceUrl = serviceUrl; }
     public void setTlsEnabled(boolean tlsEnabled) { this.tlsEnabled = tlsEnabled; }
     public void setInsecureAllowed(boolean insecureAllowed) { this.insecureAllowed = insecureAllowed; }
-    public void setCsvOutput(String csvOutput) { this.csvOutput = csvOutput; }
+    public void setCsvDirectory(String csvDirectory) { this.csvDirectory = csvDirectory; }
     public void setMaxParallel(int maxParallel) { this.maxParallel = maxParallel; }
     public void setGroupPattern(String groupPattern) { this.groupPattern = groupPattern; }
     public void setFrontPattern(String frontPattern) { this.frontPattern = frontPattern; }
@@ -97,7 +97,7 @@ public class UserConfiguration {
         public Builder(UserConfiguration existing) {
             this.config = new UserConfiguration(
                 existing.inputFolder, existing.serviceUrl, existing.tlsEnabled,
-                existing.insecureAllowed, existing.csvOutput, existing.maxParallel,
+                existing.insecureAllowed, existing.csvDirectory, existing.maxParallel,
                 existing.groupPattern, existing.frontPattern, existing.rearPattern,
                 existing.overviewPattern
             );
@@ -123,8 +123,8 @@ public class UserConfiguration {
             return this;
         }
         
-        public Builder setCsvOutput(String csvOutput) {
-            config.csvOutput = csvOutput;
+        public Builder setCsvDirectory(String csvDirectory) {
+            config.csvDirectory = csvDirectory;
             return this;
         }
         
@@ -156,7 +156,7 @@ public class UserConfiguration {
         public UserConfiguration build() {
             return new UserConfiguration(
                 config.inputFolder, config.serviceUrl, config.tlsEnabled,
-                config.insecureAllowed, config.csvOutput, config.maxParallel,
+                config.insecureAllowed, config.csvDirectory, config.maxParallel,
                 config.groupPattern, config.frontPattern, config.rearPattern,
                 config.overviewPattern
             );

@@ -3,7 +3,11 @@ package com.smartcloudsolutions.tollingvision.samples.ui;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDateTime;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
 import com.smartcloudsolutions.tollingvision.samples.model.ImageGroupResult;
@@ -56,9 +60,12 @@ public class MainScreen {
     private final TextField urlField = new TextField("localhost:50051");
     private final CheckBox tlsCheck = new CheckBox();
     private final CheckBox insecureCheck = new CheckBox();
-    private final TextField csvField = new TextField("results-" + LocalDateTime.now().toLocalDate() + ".csv");
+    private final TextField csvField = new TextField();
     private final Button csvBtn = new Button();
     private final Spinner<Integer> maxParSpin = new Spinner<>(1, 64, 4);
+    
+    // Current session CSV file path (not persisted in config)
+    private String currentCsvFilePath = "";
 
     private final TextField groupPatternField = new TextField("^.{7}");
     private final TextField frontPatternField = new TextField(".*front.*");
@@ -228,6 +235,7 @@ public class MainScreen {
         sectionTitle.getStyleClass().add("section-title");
 
         // Input folder
+        dirField.getStyleClass().add("required-field");
         HBox folderRow = createFormRow(
                 messages.getString("config.input.folder"),
                 messages.getString("config.input.folder.tooltip"),
@@ -294,8 +302,8 @@ public class MainScreen {
                 maxParSpin);
 
         // Export CSS
-        csvBtn.setText(messages.getString("button.save.as"));
-        csvBtn.setOnAction(e -> chooseCsv());
+        csvBtn.setText(messages.getString("button.choose"));
+        csvBtn.setOnAction(e -> chooseCsvDirectory());
         HBox exportRow = createFormRow(
                 messages.getString("config.connection.export"),
                 messages.getString("config.connection.export.tooltip"),
@@ -311,9 +319,11 @@ public class MainScreen {
 
     private HBox createControlButtons() {
         startBtn.setText(messages.getString("button.start"));
-        startBtn.setTooltip(new Tooltip(messages.getString("button.start.tooltip")));
         startBtn.getStyleClass().addAll("button", "button-primary");
         startBtn.disableProperty().bind(dirField.textProperty().isEmpty().or(processing));
+        
+        // Dynamic tooltip based on button state
+        updateStartButtonTooltip();
         startBtn.setOnAction(e -> {
             if (onStartProcessing != null) {
                 onStartProcessing.run();
@@ -398,7 +408,7 @@ public class MainScreen {
             @Override
             protected void updateItem(ImageGroupResult item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getBucket());
+                setText(empty || item == null ? "" : item.getDisplayText());
             }
         });
 
@@ -444,18 +454,76 @@ public class MainScreen {
         }
     }
 
-    private void chooseCsv() {
+    private void chooseCsvDirectory() {
+        DirectoryChooser dc = new DirectoryChooser();
+        dc.setTitle("Select CSV Output Directory");
+        
+        // Set initial directory to current CSV directory if set
+        String csvDir = csvField.getText().trim();
+        if (!csvDir.isEmpty()) {
+            File dir = new File(csvDir);
+            if (dir.exists() && dir.isDirectory()) {
+                dc.setInitialDirectory(dir);
+            }
+        }
+        
+        File selectedDir = dc.showDialog(primaryStage);
+        if (selectedDir != null) {
+            csvField.setText(selectedDir.getAbsolutePath());
+            // Reset current session file path when directory changes
+            currentCsvFilePath = "";
+        }
+    }
+    
+    /**
+     * Shows Save As dialog for CSV file selection.
+     * This is used when user wants to override the default filename for current session.
+     */
+    public void showSaveAsDialog() {
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
+        fc.setTitle("Save CSV Results As");
+        
+        // Set initial directory to the stored CSV directory
+        String csvDir = csvField.getText().trim();
+        if (!csvDir.isEmpty()) {
+            File dir = new File(csvDir);
+            if (dir.exists() && dir.isDirectory()) {
+                fc.setInitialDirectory(dir);
+            }
+        }
+        
+        // Set default filename
+        fc.setInitialFileName(getDefaultCsvFileName());
+        
         File f = fc.showSaveDialog(primaryStage);
         if (f != null) {
-            csvField.setText(f.getAbsolutePath());
+            // Store the full path for current session
+            currentCsvFilePath = f.getAbsolutePath();
+            
+            // Update the directory field (only directory is persisted)
+            String parentDir = f.getParent();
+            if (parentDir != null) {
+                csvField.setText(parentDir);
+            }
         }
     }
 
     private void openGallery(ImageGroupResult result) {
         GalleryWindow gallery = new GalleryWindow(result, messages);
         gallery.show();
+    }
+    
+    /**
+     * Generates the default CSV filename using current date in Budapest time.
+     * Format: results-YYYY-MM-DD.csv
+     * 
+     * @return the default CSV filename
+     */
+    private String getDefaultCsvFileName() {
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Budapest"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return "results-" + today.format(formatter) + ".csv";
     }
 
     // Getters for configuration values
@@ -497,11 +565,25 @@ public class MainScreen {
 
     /**
      * Gets the CSV output file path.
+     * Returns the current session override if set, otherwise constructs default path.
      * 
      * @return the CSV output file path
      */
     public String getCsvOutput() {
-        return csvField.getText();
+        // If user has chosen a specific file for this session, use it
+        if (!currentCsvFilePath.isEmpty()) {
+            return currentCsvFilePath;
+        }
+        
+        // Otherwise, construct default path from directory + default filename
+        String csvDir = csvField.getText().trim();
+        if (csvDir.isEmpty()) {
+            // If no directory set, use current working directory
+            csvDir = System.getProperty("user.dir");
+        }
+        
+        Path csvPath = Paths.get(csvDir, getDefaultCsvFileName());
+        return csvPath.toString();
     }
 
     /**
@@ -675,12 +757,15 @@ public class MainScreen {
         urlField.setText(config.getServiceUrl());
         tlsCheck.setSelected(config.isTlsEnabled());
         insecureCheck.setSelected(config.isInsecureAllowed());
-        csvField.setText(config.getCsvOutput());
+        csvField.setText(config.getCsvDirectory());
         maxParSpin.getValueFactory().setValue(config.getMaxParallel());
         groupPatternField.setText(config.getGroupPattern());
         frontPatternField.setText(config.getFrontPattern());
         rearPatternField.setText(config.getRearPattern());
         overviewPatternField.setText(config.getOverviewPattern());
+        
+        // Reset current session CSV file path when loading config
+        currentCsvFilePath = "";
     }
 
     /**
@@ -694,7 +779,7 @@ public class MainScreen {
                 .setServiceUrl(urlField.getText())
                 .setTlsEnabled(tlsCheck.isSelected())
                 .setInsecureAllowed(insecureCheck.isSelected())
-                .setCsvOutput(csvField.getText())
+                .setCsvDirectory(csvField.getText())
                 .setMaxParallel(maxParSpin.getValue())
                 .setGroupPattern(groupPatternField.getText())
                 .setFrontPattern(frontPatternField.getText())
@@ -708,7 +793,10 @@ public class MainScreen {
      */
     private void setupConfigurationAutoSave() {
         // Add listeners to save configuration when fields change
-        dirField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        dirField.textProperty().addListener((obs, oldVal, newVal) -> {
+            saveConfiguration();
+            updateStartButtonTooltip();
+        });
         urlField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
         tlsCheck.selectedProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
         insecureCheck.selectedProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
@@ -718,5 +806,23 @@ public class MainScreen {
         frontPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
         rearPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
         overviewPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
+        
+        // Also listen to processing state changes
+        processing.addListener((obs, oldVal, newVal) -> updateStartButtonTooltip());
+    }
+    
+    /**
+     * Updates the start button tooltip based on current state.
+     */
+    private void updateStartButtonTooltip() {
+        String tooltipText;
+        if (processing.get()) {
+            tooltipText = "Processing is currently running";
+        } else if (dirField.getText().trim().isEmpty()) {
+            tooltipText = "Please select an input folder containing vehicle images";
+        } else {
+            tooltipText = messages.getString("button.start.tooltip");
+        }
+        startBtn.setTooltip(new Tooltip(tooltipText));
     }
 }

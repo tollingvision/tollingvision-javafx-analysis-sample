@@ -76,7 +76,7 @@ public class ConfigurationManager {
                 .setServiceUrl("localhost:50051")
                 .setTlsEnabled(true)
                 .setInsecureAllowed(false)
-                .setCsvOutput("results-" + LocalDateTime.now().toLocalDate() + ".csv")
+                .setCsvDirectory("")
                 .setMaxParallel(4)
                 .setGroupPattern("^.{7}")
                 .setFrontPattern(".*front.*")
@@ -100,7 +100,17 @@ public class ConfigurationManager {
         builder.setServiceUrl(extractStringValue(jsonContent, "serviceUrl", "localhost:50051"));
         builder.setTlsEnabled(extractBooleanValue(jsonContent, "tlsEnabled", true));
         builder.setInsecureAllowed(extractBooleanValue(jsonContent, "insecureAllowed", false));
-        builder.setCsvOutput(extractStringValue(jsonContent, "csvOutput", "results-" + LocalDateTime.now().toLocalDate() + ".csv"));
+        // Handle backward compatibility: try csvDirectory first, then fall back to csvOutput
+        String csvDir = extractStringValue(jsonContent, "csvDirectory", "");
+        if (csvDir.isEmpty()) {
+            // Backward compatibility: extract directory from old csvOutput field
+            String oldCsvOutput = extractStringValue(jsonContent, "csvOutput", "");
+            if (!oldCsvOutput.isEmpty()) {
+                Path oldPath = Paths.get(oldCsvOutput);
+                csvDir = oldPath.getParent() != null ? oldPath.getParent().toString() : "";
+            }
+        }
+        builder.setCsvDirectory(csvDir);
         builder.setMaxParallel(extractIntValue(jsonContent, "maxParallel", 4));
         builder.setGroupPattern(extractStringValue(jsonContent, "groupPattern", "^.{7}"));
         builder.setFrontPattern(extractStringValue(jsonContent, "frontPattern", ".*front.*"));
@@ -123,7 +133,7 @@ public class ConfigurationManager {
         json.append("  \"serviceUrl\": \"").append(escapeJson(config.getServiceUrl())).append("\",\n");
         json.append("  \"tlsEnabled\": ").append(config.isTlsEnabled()).append(",\n");
         json.append("  \"insecureAllowed\": ").append(config.isInsecureAllowed()).append(",\n");
-        json.append("  \"csvOutput\": \"").append(escapeJson(config.getCsvOutput())).append("\",\n");
+        json.append("  \"csvDirectory\": \"").append(escapeJson(config.getCsvDirectory())).append("\",\n");
         json.append("  \"maxParallel\": ").append(config.getMaxParallel()).append(",\n");
         json.append("  \"groupPattern\": \"").append(escapeJson(config.getGroupPattern())).append("\",\n");
         json.append("  \"frontPattern\": \"").append(escapeJson(config.getFrontPattern())).append("\",\n");
