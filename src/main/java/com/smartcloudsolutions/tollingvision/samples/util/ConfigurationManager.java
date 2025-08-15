@@ -4,21 +4,23 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 
 import com.smartcloudsolutions.tollingvision.samples.model.UserConfiguration;
 
 /**
- * Manages user configuration persistence to ~/.tollingvision-client/config.json.
+ * Manages user configuration persistence to
+ * ~/.tollingvision-client/config.json.
  * Uses simple JSON serialization for configuration data.
  */
 public class ConfigurationManager {
-    
+
     private static final String CONFIG_DIR = ".tollingvision-client";
     private static final String CONFIG_FILE = "config.json";
-    
+
+    private static final char[] HEX = "0123456789ABCDEF".toCharArray();
+
     private final Path configPath;
-    
+
     /**
      * Creates a new ConfigurationManager instance.
      */
@@ -27,7 +29,7 @@ public class ConfigurationManager {
         Path configDir = homeDir.resolve(CONFIG_DIR);
         this.configPath = configDir.resolve(CONFIG_FILE);
     }
-    
+
     /**
      * Loads user configuration from the config file.
      * Returns default configuration if file doesn't exist or can't be read.
@@ -39,16 +41,16 @@ public class ConfigurationManager {
             if (!Files.exists(configPath)) {
                 return createDefaultConfiguration();
             }
-            
+
             String jsonContent = Files.readString(configPath);
             return parseJsonConfiguration(jsonContent);
-            
+
         } catch (Exception e) {
             System.err.println("Failed to load configuration: " + e.getMessage());
             return createDefaultConfiguration();
         }
     }
-    
+
     /**
      * Saves user configuration to the config file.
      * Creates the config directory if it doesn't exist.
@@ -59,12 +61,12 @@ public class ConfigurationManager {
     public void saveConfiguration(UserConfiguration config) throws IOException {
         // Ensure config directory exists
         Files.createDirectories(configPath.getParent());
-        
+
         // Convert to JSON and save
         String jsonContent = toJson(config);
         Files.writeString(configPath, jsonContent);
     }
-    
+
     /**
      * Creates a default configuration with sensible defaults.
      * 
@@ -84,7 +86,7 @@ public class ConfigurationManager {
                 .setOverviewPattern(".*scene.*")
                 .build();
     }
-    
+
     /**
      * Parses JSON configuration content into a UserConfiguration object.
      * 
@@ -94,13 +96,14 @@ public class ConfigurationManager {
     protected UserConfiguration parseJsonConfiguration(String jsonContent) {
         // Simple JSON parsing - in a real application you might use a JSON library
         UserConfiguration.Builder builder = UserConfiguration.newBuilder();
-        
+
         // Extract values using simple string parsing
         builder.setInputFolder(extractStringValue(jsonContent, "inputFolder", ""));
         builder.setServiceUrl(extractStringValue(jsonContent, "serviceUrl", "localhost:50051"));
         builder.setTlsEnabled(extractBooleanValue(jsonContent, "tlsEnabled", true));
         builder.setInsecureAllowed(extractBooleanValue(jsonContent, "insecureAllowed", false));
-        // Handle backward compatibility: try csvDirectory first, then fall back to csvOutput
+        // Handle backward compatibility: try csvDirectory first, then fall back to
+        // csvOutput
         String csvDir = extractStringValue(jsonContent, "csvDirectory", "");
         if (csvDir.isEmpty()) {
             // Backward compatibility: extract directory from old csvOutput field
@@ -116,10 +119,10 @@ public class ConfigurationManager {
         builder.setFrontPattern(extractStringValue(jsonContent, "frontPattern", ".*front.*"));
         builder.setRearPattern(extractStringValue(jsonContent, "rearPattern", ".*rear.*"));
         builder.setOverviewPattern(extractStringValue(jsonContent, "overviewPattern", ".*scene.*"));
-        
+
         return builder.build();
     }
-    
+
     /**
      * Converts a UserConfiguration to JSON format.
      * 
@@ -142,7 +145,7 @@ public class ConfigurationManager {
         json.append("}");
         return json.toString();
     }
-    
+
     /**
      * Extracts a string value from JSON content.
      */
@@ -150,9 +153,9 @@ public class ConfigurationManager {
         String pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*?)\"";
         java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
         java.util.regex.Matcher m = p.matcher(json);
-        return m.find() ? m.group(1) : defaultValue;
+        return m.find() ? unescapeJson(m.group(1)) : defaultValue;
     }
-    
+
     /**
      * Extracts a boolean value from JSON content.
      */
@@ -162,7 +165,7 @@ public class ConfigurationManager {
         java.util.regex.Matcher m = p.matcher(json);
         return m.find() ? Boolean.parseBoolean(m.group(1)) : defaultValue;
     }
-    
+
     /**
      * Extracts an integer value from JSON content.
      */
@@ -172,19 +175,116 @@ public class ConfigurationManager {
         java.util.regex.Matcher m = p.matcher(json);
         return m.find() ? Integer.parseInt(m.group(1)) : defaultValue;
     }
-    
+
     /**
      * Escapes special characters in JSON strings.
      */
     protected String escapeJson(String value) {
-        if (value == null) return "";
-        return value.replace("\\", "\\\\")
-                   .replace("\"", "\\\"")
-                   .replace("\n", "\\n")
-                   .replace("\r", "\\r")
-                   .replace("\t", "\\t");
+        if (value == null)
+            return "";
+
+        StringBuilder sb = new StringBuilder(value.length() + 16);
+        final int len = value.length();
+        for (int i = 0; i < len; i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '"':
+                    sb.append("\\\"");
+                    break;
+                case '\\':
+                    sb.append("\\\\");
+                    break;
+                case '\b':
+                    sb.append("\\b");
+                    break;
+                case '\f':
+                    sb.append("\\f");
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                case '\t':
+                    sb.append("\\t");
+                    break;
+                // case '/': sb.append("\\/"); break; // opcionális: ha szeretnéd a slash-t is
+                // escape-elni
+                default:
+                    // Kötelezően escape-elendők: 0x00–0x1F, valamint U+2028/U+2029 (JS környezetek
+                    // miatt)
+                    if (c < 0x20 || c == '\u2028' || c == '\u2029') {
+                        sb.append("\\u").append(toHex4(c));
+                    } else if (Character.isLowSurrogate(c)
+                            && (i == 0 || !Character.isHighSurrogate(value.charAt(i - 1)))) {
+                        // Árva (unpaired) low-surrogate – inkább escapeljük
+                        sb.append("\\u").append(toHex4(c));
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+        return sb.toString();
     }
-    
+
+    /**
+     * Unescapes special JSON characters.
+     */
+    protected String unescapeJson(String s) {
+        StringBuilder out = new StringBuilder(s.length());
+        for (int i = 0; i < s.length();) {
+            char c = s.charAt(i++);
+            if (c == '\\') {
+                if (i >= s.length()) {
+                    out.append('\\');
+                    break;
+                }
+                char e = s.charAt(i++);
+                switch (e) {
+                    case '"':
+                        out.append('"');
+                        break;
+                    case '\\':
+                        out.append('\\');
+                        break;
+                    case '/':
+                        out.append('/');
+                        break;
+                    case 'b':
+                        out.append('\b');
+                        break;
+                    case 'f':
+                        out.append('\f');
+                        break;
+                    case 'n':
+                        out.append('\n');
+                        break;
+                    case 'r':
+                        out.append('\r');
+                        break;
+                    case 't':
+                        out.append('\t');
+                        break;
+                    case 'u':
+                        if (i + 4 <= s.length()) {
+                            String hex = s.substring(i, i + 4);
+                            out.append((char) Integer.parseInt(hex, 16));
+                            i += 4;
+                        } else {
+                            out.append('\uFFFD');
+                        }
+                        break;
+                    default:
+                        out.append(e);
+                }
+            } else {
+                out.append(c);
+            }
+        }
+        return out.toString();
+    }
+
     /**
      * Gets the path to the configuration file.
      * 
@@ -193,4 +293,14 @@ public class ConfigurationManager {
     public Path getConfigPath() {
         return configPath;
     }
+
+    private String toHex4(char ch) {
+        return new String(new char[] {
+                HEX[(ch >>> 12) & 0xF],
+                HEX[(ch >>> 8) & 0xF],
+                HEX[(ch >>> 4) & 0xF],
+                HEX[(ch) & 0xF]
+        });
+    }
+
 }

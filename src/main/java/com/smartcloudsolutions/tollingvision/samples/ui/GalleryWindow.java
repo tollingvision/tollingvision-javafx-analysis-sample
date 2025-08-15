@@ -203,7 +203,7 @@ public class GalleryWindow {
             if (!result.getFrontPlate().isEmpty()) {
                 String frontLine = buildPlateLine(result.getEventResult().getFrontPlate());
                 anprSection.getChildren()
-                        .add(new Label(messages.getString("gallery.plate.front").replace("{0}", frontLine)));
+                        .add(new Label(String.format(messages.getString("gallery.plate.front"), frontLine)));
                 for (var plateAlt : result.getEventResult().getFrontPlateAlternativeList()) {
                     String plateAltLine = buildPlateLine(plateAlt);
                     if (plateAltLine.length() > 0) {
@@ -215,7 +215,7 @@ public class GalleryWindow {
             if (!result.getRearPlate().isEmpty()) {
                 String rearLine = buildPlateLine(result.getEventResult().getRearPlate());
                 anprSection.getChildren()
-                        .add(new Label(messages.getString("gallery.plate.rear").replace("{0}", rearLine)));
+                        .add(new Label(String.format(messages.getString("gallery.plate.rear"), rearLine)));
                 for (var plateAlt : result.getEventResult().getRearPlateAlternativeList()) {
                     String plateAltLine = buildPlateLine(plateAlt);
                     if (plateAltLine.length() > 0) {
@@ -256,8 +256,8 @@ public class GalleryWindow {
 
     private String buildPlateLine(com.smartcloudsolutions.tollingvision.Plate plate) {
         StringBuilder anprLine = new StringBuilder(plate.getText());
-        if (!plate.getCountry().isEmpty()) {
-            anprLine.append(" | ").append(plate.getCountry());
+        if (!plate.getState().isEmpty()) {
+            anprLine.append(" | ").append(plate.getState());
         }
         if (!plate.getCategory().isEmpty()) {
             anprLine.append(" | ").append(plate.getCategory());

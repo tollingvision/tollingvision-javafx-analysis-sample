@@ -18,6 +18,10 @@ dependencies {
     runtimeOnly("com.google.protobuf:protobuf-java:4.31.1")
     implementation("com.google.protobuf:protobuf-java-util:4.31.1")
     runtimeOnly("com.google.errorprone:error_prone_annotations:2.38.0")
+    
+    // Testing dependencies
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 repositories {
@@ -28,6 +32,10 @@ repositories {
 java {
     modularity.inferModulePath.set(true)
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 application {

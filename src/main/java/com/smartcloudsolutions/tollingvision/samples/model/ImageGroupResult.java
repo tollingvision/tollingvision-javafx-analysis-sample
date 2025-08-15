@@ -68,17 +68,17 @@ public class ImageGroupResult {
         this.rearAlt = eventResult.getRearPlateAlternativeList().stream()
                 .map(plate -> plate.getText())
                 .collect(Collectors.joining("|"));
-        
+
         // Format jurisdiction data
-        this.frontJurisdiction = eventResult.hasFrontPlate() ? eventResult.getFrontPlate().getCountry() : "";
+        this.frontJurisdiction = eventResult.hasFrontPlate() ? eventResult.getFrontPlate().getState() : "";
         this.frontJurisdictionAlt = eventResult.getFrontPlateAlternativeList().stream()
-                .map(plate -> plate.getCountry())
+                .map(plate -> plate.getState())
                 .collect(Collectors.joining("|"));
-        this.rearJurisdiction = eventResult.hasRearPlate() ? eventResult.getRearPlate().getCountry() : "";
+        this.rearJurisdiction = eventResult.hasRearPlate() ? eventResult.getRearPlate().getState() : "";
         this.rearJurisdictionAlt = eventResult.getRearPlateAlternativeList().stream()
-                .map(plate -> plate.getCountry())
+                .map(plate -> plate.getState())
                 .collect(Collectors.joining("|"));
-        
+
         this.mmr = eventResult.hasMmr() ? formatMmr(eventResult.getMmr()) : "";
         this.mmrAlt = eventResult.getMmrAlternativeList().stream()
                 .map(ImageGroupResult::formatMmr)
@@ -280,7 +280,9 @@ public class ImageGroupResult {
 
     /**
      * Gets the formatted display text for the event log.
-     * Format: <group> | front plate: <front plate> (<front jurisdiction>) | rear plate: <rear plate> (<rear jurisdiction>) | mmr: <make> <model> (<variation> <generation>) <colorName> <category>
+     * Format: <group> | front plate: <front plate> (<front jurisdiction>) | rear
+     * plate: <rear plate> (<rear jurisdiction>) | mmr: <make> <model> (<variation>
+     * <generation>) <colorName> <category>
      * 
      * @return the formatted display text
      */
@@ -336,8 +338,6 @@ public class ImageGroupResult {
                 .collect(Collectors.joining("|"));
     }
 
-
-
     private static String formatMmr(com.smartcloudsolutions.tollingvision.Mmr mmr) {
         return String.format(
                 "%s %s (generation: %s|category: %s|body type: %s|view point: %s|color: %s|standard color: %s|dimensions: %s)",
@@ -354,34 +354,38 @@ public class ImageGroupResult {
      */
     private static String formatMmrForDisplay(com.smartcloudsolutions.tollingvision.Mmr mmr) {
         StringBuilder mmrDisplay = new StringBuilder();
-        
+
         // Make and Model (required)
         if (!mmr.getMake().isEmpty()) {
             mmrDisplay.append(mmr.getMake());
         }
         if (!mmr.getModel().isEmpty()) {
-            if (mmrDisplay.length() > 0) mmrDisplay.append(" ");
+            if (mmrDisplay.length() > 0)
+                mmrDisplay.append(" ");
             mmrDisplay.append(mmr.getModel());
         }
-        
+
         // Generation (optional, in parentheses)
         if (!mmr.getGeneration().isEmpty()) {
-            if (mmrDisplay.length() > 0) mmrDisplay.append(" ");
+            if (mmrDisplay.length() > 0)
+                mmrDisplay.append(" ");
             mmrDisplay.append("(").append(mmr.getGeneration()).append(")");
         }
-        
+
         // Color Name
         if (!mmr.getColorName().isEmpty()) {
-            if (mmrDisplay.length() > 0) mmrDisplay.append(" ");
+            if (mmrDisplay.length() > 0)
+                mmrDisplay.append(" ");
             mmrDisplay.append(mmr.getColorName());
         }
-        
+
         // Category
         if (!mmr.getCategory().isEmpty()) {
-            if (mmrDisplay.length() > 0) mmrDisplay.append(" ");
+            if (mmrDisplay.length() > 0)
+                mmrDisplay.append(" ");
             mmrDisplay.append(mmr.getCategory());
         }
-        
+
         return mmrDisplay.toString();
     }
 }

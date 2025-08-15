@@ -12,6 +12,9 @@ import java.util.ResourceBundle;
 
 import com.smartcloudsolutions.tollingvision.samples.model.ImageGroupResult;
 import com.smartcloudsolutions.tollingvision.samples.model.UserConfiguration;
+import com.smartcloudsolutions.tollingvision.samples.patternbuilder.PatternBuilderConfig;
+import com.smartcloudsolutions.tollingvision.samples.patternbuilder.PatternBuilderDialog;
+import com.smartcloudsolutions.tollingvision.samples.patternbuilder.PatternConfiguration;
 import com.smartcloudsolutions.tollingvision.samples.util.ConfigurationManager;
 
 import javafx.beans.property.BooleanProperty;
@@ -63,7 +66,7 @@ public class MainScreen {
     private final TextField csvField = new TextField();
     private final Button csvBtn = new Button();
     private final Spinner<Integer> maxParSpin = new Spinner<>(1, 64, 4);
-    
+
     // Current session CSV file path (not persisted in config)
     private String currentCsvFilePath = "";
 
@@ -93,6 +96,13 @@ public class MainScreen {
     private Runnable onStartProcessing;
     private Runnable onStopProcessing;
 
+    public static void addIcon(Stage stage) {
+        stage.getIcons().addAll(new Image(MainScreen.class.getResourceAsStream("/assets/logo_16_16.png")),
+        new Image(MainScreen.class.getResourceAsStream("/assets/logo_32_32.png")),
+        new Image(MainScreen.class.getResourceAsStream("/assets/logo_48_48.png")),
+        new Image(MainScreen.class.getResourceAsStream("/assets/logo_128_128.png")));
+    }
+
     /**
      * Creates a new MainScreen with the specified stage and resource bundle.
      * 
@@ -111,6 +121,7 @@ public class MainScreen {
     }
 
     private void initializeUI() {
+        MainScreen.addIcon(primaryStage);
         primaryStage.setTitle(messages.getString("app.title"));
         primaryStage.setMinWidth(1280);
         primaryStage.setMinHeight(800);
@@ -169,7 +180,7 @@ public class MainScreen {
 
         // Create a professional logo programmatically
         javafx.scene.canvas.Canvas logoCanvas = new javafx.scene.canvas.Canvas(48, 48);
-        drawPngOnCanvas(logoCanvas, "/assets/logo.png");
+        drawPngOnCanvas(logoCanvas, "/assets/logo_48_48.png");
 
         VBox branding = new VBox(2);
         Label titleLabel = new Label(messages.getString("app.title"));
@@ -266,7 +277,26 @@ public class MainScreen {
                 messages.getString("config.input.overview.pattern.tooltip"),
                 overviewPatternField);
 
-        section.getChildren().addAll(sectionTitle, folderRow, groupRow, frontRow, rearRow, overviewRow);
+        // Pattern Builder button
+        Button patternBuilderBtn = new Button(messages.getString("button.pattern.builder"));
+        patternBuilderBtn.getStyleClass().add("pattern-builder-button");
+        patternBuilderBtn.setOnAction(e -> openPatternBuilder());
+
+        // Update button state based on input folder validity
+        updatePatternBuilderButtonState(patternBuilderBtn);
+
+        // Listen for changes to input folder to update button state
+        dirField.textProperty().addListener((obs, oldVal, newVal) -> {
+            updatePatternBuilderButtonState(patternBuilderBtn);
+        });
+
+        HBox patternBuilderRow = new HBox(10);
+        patternBuilderRow.getChildren().addAll(new Label(messages.getString("label.visual.builder")),
+                patternBuilderBtn);
+        patternBuilderRow.setAlignment(Pos.CENTER_LEFT);
+
+        section.getChildren().addAll(sectionTitle, folderRow, groupRow, frontRow, rearRow, overviewRow,
+                patternBuilderRow);
         return section;
     }
 
@@ -321,7 +351,7 @@ public class MainScreen {
         startBtn.setText(messages.getString("button.start"));
         startBtn.getStyleClass().addAll("button", "button-primary");
         startBtn.disableProperty().bind(dirField.textProperty().isEmpty().or(processing));
-        
+
         // Dynamic tooltip based on button state
         updateStartButtonTooltip();
         startBtn.setOnAction(e -> {
@@ -457,7 +487,7 @@ public class MainScreen {
     private void chooseCsvDirectory() {
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle("Select CSV Output Directory");
-        
+
         // Set initial directory to current CSV directory if set
         String csvDir = csvField.getText().trim();
         if (!csvDir.isEmpty()) {
@@ -466,7 +496,7 @@ public class MainScreen {
                 dc.setInitialDirectory(dir);
             }
         }
-        
+
         File selectedDir = dc.showDialog(primaryStage);
         if (selectedDir != null) {
             csvField.setText(selectedDir.getAbsolutePath());
@@ -474,16 +504,218 @@ public class MainScreen {
             currentCsvFilePath = "";
         }
     }
-    
+
+    /**
+     * Updates the Pattern Builder button state based on input folder validity.
+     */
+    private void updatePatternBuilderButtonState(Button patternBuilderBtn) {
+        String inputFolder = dirField.getText().trim();
+        boolean isValidFolder = isValidInputFolder(inputFolder);
+
+        patternBuilderBtn.setDisable(!isValidFolder);
+
+        if (isValidFolder) {
+            patternBuilderBtn.setTooltip(new Tooltip(messages.getString("tooltip.pattern.builder.enabled")));
+        } else {
+            patternBuilderBtn.setTooltip(new Tooltip(messages.getString("tooltip.pattern.builder.disabled")));
+        }
+    }
+
+    /**
+     * Validates if the input folder is valid and accessible.
+     */
+    private boolean isValidInputFolder(String folderPath) {
+        if (folderPath == null || folderPath.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            Path path = Paths.get(folderPath);
+            return java.nio.file.Files.exists(path) && java.nio.file.Files.isDirectory(path);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Opens the Pattern Builder dialog for visual pattern configuration.
+     */
+    private void openPatternBuilder() {
+        String inputFolder = dirField.getText().trim();
+
+        // Validate input folder before opening
+        if (!isValidInputFolder(inputFolder)) {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                    javafx.scene.control.Alert.AlertType.WARNING);
+            alert.setTitle(messages.getString("error.title"));
+            alert.setHeaderText(messages.getString("error.input.folder.required"));
+            alert.setContentText(messages.getString("error.pattern.builder.disabled"));
+            alert.showAndWait();
+            return;
+        }
+
+        PatternBuilderDialog dialog = new PatternBuilderDialog(inputFolder, messages);
+        MainScreen.addIcon(dialog);
+
+        // Set callback to update pattern fields when configuration is complete
+        dialog.setOnConfigurationComplete(config -> {
+            // Update existing pattern fields with generated patterns
+            if (config.getGroupPattern() != null && !config.getGroupPattern().trim().isEmpty()) {
+                groupPatternField.setText(config.getGroupPattern());
+            }
+            if (config.getFrontPattern() != null && !config.getFrontPattern().trim().isEmpty()) {
+                frontPatternField.setText(config.getFrontPattern());
+            }
+            if (config.getRearPattern() != null && !config.getRearPattern().trim().isEmpty()) {
+                rearPatternField.setText(config.getRearPattern());
+            }
+            if (config.getOverviewPattern() != null && !config.getOverviewPattern().trim().isEmpty()) {
+                overviewPatternField.setText(config.getOverviewPattern());
+            }
+
+            // Update pattern builder config in user configuration
+            updatePatternBuilderConfig(config);
+
+            // Configuration will be automatically saved by existing auto-save mechanism
+            saveConfiguration();
+        });
+
+        // Initialize with current patterns and pattern builder config
+        PatternConfiguration currentConfig = getCurrentPatternConfiguration();
+        dialog.showDialog(currentConfig);
+    }
+
+    /**
+     * Creates a PatternConfiguration from current pattern field values and stored
+     * builder config.
+     */
+    private PatternConfiguration getCurrentPatternConfiguration() {
+        PatternConfiguration config = new PatternConfiguration();
+        config.setGroupPattern(groupPatternField.getText());
+        config.setFrontPattern(frontPatternField.getText());
+        config.setRearPattern(rearPatternField.getText());
+        config.setOverviewPattern(overviewPatternField.getText());
+
+        // Load pattern builder config from user configuration if available
+        try {
+            UserConfiguration userConfig = configManager.loadConfiguration();
+            if (userConfig.getPatternBuilderConfig() != null) {
+                PatternBuilderConfig builderConfig = userConfig.getPatternBuilderConfig();
+                config.setRoleRules(builderConfig.getRoleRules());
+                config.setTokens(builderConfig.getTokens());
+                config.setGroupIdToken(builderConfig.getGroupIdToken());
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load pattern builder config: " + e.getMessage());
+        }
+
+        return config;
+    }
+
+    /**
+     * Updates the pattern builder configuration from a PatternConfiguration.
+     */
+    private void updatePatternBuilderConfig(PatternConfiguration config) {
+        try {
+            UserConfiguration userConfig = configManager.loadConfiguration();
+            PatternBuilderConfig builderConfig = userConfig.getPatternBuilderConfig();
+
+            // Update builder config with current pattern configuration
+            builderConfig.fromPatternConfiguration(config);
+
+            // Set last used directory to current input folder if available
+            String inputFolder = dirField.getText().trim();
+            if (!inputFolder.isEmpty()) {
+                builderConfig.setLastUsedDirectory(inputFolder);
+            }
+
+            userConfig.setPatternBuilderConfig(builderConfig);
+            configManager.saveConfiguration(userConfig);
+        } catch (Exception e) {
+            System.err.println("Failed to update pattern builder config: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Validates the current pattern configuration.
+     * This integrates with existing pattern validation logic.
+     * 
+     * @return true if patterns are valid, false otherwise
+     */
+    public boolean validatePatterns() {
+        String groupPattern = groupPatternField.getText().trim();
+        String frontPattern = frontPatternField.getText().trim();
+        String rearPattern = rearPatternField.getText().trim();
+        String overviewPattern = overviewPatternField.getText().trim();
+
+        // Basic validation - group pattern is required
+        if (groupPattern.isEmpty()) {
+            System.err.println("Group pattern is required");
+            return false;
+        }
+
+        // At least one role pattern should be defined
+        if (frontPattern.isEmpty() && rearPattern.isEmpty() && overviewPattern.isEmpty()) {
+            System.err.println("At least one role pattern (front, rear, or overview) must be defined");
+            return false;
+        }
+
+        // Validate regex syntax
+        try {
+            java.util.regex.Pattern.compile(groupPattern);
+            if (!frontPattern.isEmpty()) {
+                java.util.regex.Pattern.compile(frontPattern);
+            }
+            if (!rearPattern.isEmpty()) {
+                java.util.regex.Pattern.compile(rearPattern);
+            }
+            if (!overviewPattern.isEmpty()) {
+                java.util.regex.Pattern.compile(overviewPattern);
+            }
+        } catch (java.util.regex.PatternSyntaxException e) {
+            System.err.println("Invalid regex pattern: " + e.getMessage());
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Handles backward compatibility for existing regex configurations.
+     * This method ensures that existing configurations continue to work
+     * when the pattern builder is introduced.
+     */
+    private void handleBackwardCompatibility() {
+        try {
+            UserConfiguration config = configManager.loadConfiguration();
+
+            // If pattern builder config is null or empty, initialize it
+            if (config.getPatternBuilderConfig() == null) {
+                PatternBuilderConfig builderConfig = new PatternBuilderConfig();
+
+                // Set last used directory from input folder if available
+                if (!config.getInputFolder().isEmpty()) {
+                    builderConfig.setLastUsedDirectory(config.getInputFolder());
+                }
+
+                config.setPatternBuilderConfig(builderConfig);
+                configManager.saveConfiguration(config);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to handle backward compatibility: " + e.getMessage());
+        }
+    }
+
     /**
      * Shows Save As dialog for CSV file selection.
-     * This is used when user wants to override the default filename for current session.
+     * This is used when user wants to override the default filename for current
+     * session.
      */
     public void showSaveAsDialog() {
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
         fc.setTitle("Save CSV Results As");
-        
+
         // Set initial directory to the stored CSV directory
         String csvDir = csvField.getText().trim();
         if (!csvDir.isEmpty()) {
@@ -492,15 +724,15 @@ public class MainScreen {
                 fc.setInitialDirectory(dir);
             }
         }
-        
+
         // Set default filename
         fc.setInitialFileName(getDefaultCsvFileName());
-        
+
         File f = fc.showSaveDialog(primaryStage);
         if (f != null) {
             // Store the full path for current session
             currentCsvFilePath = f.getAbsolutePath();
-            
+
             // Update the directory field (only directory is persisted)
             String parentDir = f.getParent();
             if (parentDir != null) {
@@ -513,7 +745,7 @@ public class MainScreen {
         GalleryWindow gallery = new GalleryWindow(result, messages);
         gallery.show();
     }
-    
+
     /**
      * Generates the default CSV filename using current date in Budapest time.
      * Format: results-YYYY-MM-DD.csv
@@ -565,7 +797,8 @@ public class MainScreen {
 
     /**
      * Gets the CSV output file path.
-     * Returns the current session override if set, otherwise constructs default path.
+     * Returns the current session override if set, otherwise constructs default
+     * path.
      * 
      * @return the CSV output file path
      */
@@ -574,14 +807,14 @@ public class MainScreen {
         if (!currentCsvFilePath.isEmpty()) {
             return currentCsvFilePath;
         }
-        
+
         // Otherwise, construct default path from directory + default filename
         String csvDir = csvField.getText().trim();
         if (csvDir.isEmpty()) {
             // If no directory set, use current working directory
             csvDir = System.getProperty("user.dir");
         }
-        
+
         Path csvPath = Paths.get(csvDir, getDefaultCsvFileName());
         return csvPath.toString();
     }
@@ -629,6 +862,52 @@ public class MainScreen {
      */
     public String getOverviewPattern() {
         return overviewPatternField.getText();
+    }
+
+    // Pattern field getters for testing
+    /**
+     * Gets the group pattern field for testing purposes.
+     * 
+     * @return the group pattern text field
+     */
+    TextField getGroupPatternField() {
+        return groupPatternField;
+    }
+
+    /**
+     * Gets the front pattern field for testing purposes.
+     * 
+     * @return the front pattern text field
+     */
+    TextField getFrontPatternField() {
+        return frontPatternField;
+    }
+
+    /**
+     * Gets the rear pattern field for testing purposes.
+     * 
+     * @return the rear pattern text field
+     */
+    TextField getRearPatternField() {
+        return rearPatternField;
+    }
+
+    /**
+     * Gets the overview pattern field for testing purposes.
+     * 
+     * @return the overview pattern text field
+     */
+    TextField getOverviewPatternField() {
+        return overviewPatternField;
+    }
+
+    /**
+     * Gets the current pattern configuration for testing purposes.
+     * 
+     * @return the current pattern configuration
+     */
+    PatternConfiguration getPatternConfigurationForTesting() {
+        return getCurrentPatternConfiguration();
     }
 
     // Property getters
@@ -729,6 +1008,9 @@ public class MainScreen {
         try {
             UserConfiguration config = configManager.loadConfiguration();
             applyConfiguration(config);
+
+            // Handle backward compatibility for existing configurations
+            handleBackwardCompatibility();
         } catch (Exception e) {
             System.err.println("Failed to load configuration: " + e.getMessage());
             // Continue with default values already set in UI
@@ -763,7 +1045,11 @@ public class MainScreen {
         frontPatternField.setText(config.getFrontPattern());
         rearPatternField.setText(config.getRearPattern());
         overviewPatternField.setText(config.getOverviewPattern());
-        
+
+        // Pattern builder config is loaded on-demand in
+        // getCurrentPatternConfiguration()
+        // to avoid circular dependencies during initialization
+
         // Reset current session CSV file path when loading config
         currentCsvFilePath = "";
     }
@@ -774,6 +1060,16 @@ public class MainScreen {
      * @return the current configuration
      */
     private UserConfiguration getCurrentConfiguration() {
+        // Preserve existing pattern builder config when saving
+        PatternBuilderConfig existingBuilderConfig = null;
+        try {
+            UserConfiguration existing = configManager.loadConfiguration();
+            existingBuilderConfig = existing.getPatternBuilderConfig();
+        } catch (Exception e) {
+            // Use default if loading fails
+            existingBuilderConfig = new PatternBuilderConfig();
+        }
+
         return UserConfiguration.newBuilder()
                 .setInputFolder(dirField.getText())
                 .setServiceUrl(urlField.getText())
@@ -785,6 +1081,7 @@ public class MainScreen {
                 .setFrontPattern(frontPatternField.getText())
                 .setRearPattern(rearPatternField.getText())
                 .setOverviewPattern(overviewPatternField.getText())
+                .setPatternBuilderConfig(existingBuilderConfig)
                 .build();
     }
 
@@ -806,11 +1103,11 @@ public class MainScreen {
         frontPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
         rearPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
         overviewPatternField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
-        
+
         // Also listen to processing state changes
         processing.addListener((obs, oldVal, newVal) -> updateStartButtonTooltip());
     }
-    
+
     /**
      * Updates the start button tooltip based on current state.
      */

@@ -150,7 +150,7 @@ public class AnalysisSampleApp extends Application {
                     : ManagedChannelBuilder.forTarget(url).usePlaintext().build();
             stub0 = TollingVisionServiceGrpc.newStub(ch0);
         } catch (Exception ex) {
-            log(messages.getString("message.error.connection").replace("{0}", ex.getMessage()));
+            log(String.format(messages.getString("message.error.connection"), ex.getMessage()));
             mainScreen.processingProperty().set(false);
             return;
         }
@@ -171,8 +171,7 @@ public class AnalysisSampleApp extends Application {
                         return null;
                     }
 
-                    log(messages.getString("message.processing.start").replace("{0}", String.valueOf(total))
-                            .replace("{1}", String.valueOf(maxPar)));
+                    log(String.format(messages.getString("message.processing.start"), total, maxPar));
 
                     // Initialize CSV writer and write header
                     initializeCsvWriter(csvOut.toPath());
@@ -285,7 +284,7 @@ public class AnalysisSampleApp extends Application {
                             csvWriter.close();
                             csvWriter = null;
                             if (!stopRequested) {
-                                log(messages.getString("message.csv.saved").replace("{0}", csvOut.toString()));
+                                log(String.format(messages.getString("message.csv.saved"), csvOut.toString()));
                             }
                         } catch (IOException e) {
                             log("Error closing CSV writer: " + e.getMessage());
@@ -309,7 +308,7 @@ public class AnalysisSampleApp extends Application {
                         log("Error closing CSV writer in done(): " + e.getMessage());
                     }
                 }
-                
+
                 Platform.runLater(() -> {
                     mainScreen.processingProperty().set(false);
                     mainScreen.getProgressBar().progressProperty().unbind();
@@ -377,7 +376,8 @@ public class AnalysisSampleApp extends Application {
     private void initializeCsvWriter(Path out) throws IOException {
         // Create CSV writer and write header only once
         csvWriter = Files.newBufferedWriter(out);
-        csvWriter.write("Bucket,Front Images,Rear Images,Overview Images,Front Plate,Front Jurisdiction,Front Plate Alt,Front Jurisdiction Alt,Rear Plate,Rear Jurisdiction,Rear Plate Alt,Rear Jurisdiction Alt,MMR,MMR Alt\n");
+        csvWriter.write(
+                "Bucket,Front Images,Rear Images,Overview Images,Front Plate,Front Jurisdiction,Front Plate Alt,Front Jurisdiction Alt,Rear Plate,Rear Jurisdiction,Rear Plate Alt,Rear Jurisdiction Alt,MMR,MMR Alt\n");
         csvWriter.flush();
     }
 
@@ -385,22 +385,23 @@ public class AnalysisSampleApp extends Application {
         if (csvWriter == null || result.getBucket().startsWith("[LOG]")) {
             return;
         }
-        
+
         try {
-            csvWriter.write(String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
-                    escapeCSV(result.getBucket()), 
-                    escapeCSV(result.getFrontNames()), 
-                    escapeCSV(result.getRearNames()), 
+            csvWriter.write(String.format(
+                    "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
+                    escapeCSV(result.getBucket()),
+                    escapeCSV(result.getFrontNames()),
+                    escapeCSV(result.getRearNames()),
                     escapeCSV(result.getOverNames()),
-                    escapeCSV(result.getFrontPlate()), 
+                    escapeCSV(result.getFrontPlate()),
                     escapeCSV(result.getFrontJurisdiction()),
-                    escapeCSV(result.getFrontAlt()), 
+                    escapeCSV(result.getFrontAlt()),
                     escapeCSV(result.getFrontJurisdictionAlt()),
-                    escapeCSV(result.getRearPlate()), 
+                    escapeCSV(result.getRearPlate()),
                     escapeCSV(result.getRearJurisdiction()),
                     escapeCSV(result.getRearAlt()),
                     escapeCSV(result.getRearJurisdictionAlt()),
-                    escapeCSV(result.getMmr()), 
+                    escapeCSV(result.getMmr()),
                     escapeCSV(result.getMmrAlt())));
             csvWriter.flush(); // Ensure data is durable on disk
         } catch (IOException e) {
@@ -409,7 +410,8 @@ public class AnalysisSampleApp extends Application {
     }
 
     private String escapeCSV(String value) {
-        if (value == null) return "";
+        if (value == null)
+            return "";
         // Escape quotes by doubling them
         return value.replace("\"", "\"\"");
     }
@@ -422,7 +424,7 @@ public class AnalysisSampleApp extends Application {
         for (int i = 0; i < patterns.length; i++)
             if (patterns[i].isBlank())
                 throw new IllegalArgumentException(
-                        messages.getString("message.error.regex.empty").replace("{0}", String.valueOf(i + 1)));
+                        String.format(messages.getString("message.error.regex.empty"), String.valueOf(i + 1)));
     }
 
     private void log(String msg) {

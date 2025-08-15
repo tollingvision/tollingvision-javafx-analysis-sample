@@ -1,5 +1,7 @@
 package com.smartcloudsolutions.tollingvision.samples.model;
 
+import com.smartcloudsolutions.tollingvision.samples.patternbuilder.PatternBuilderConfig;
+
 /**
  * User configuration data model for the TollingVision application.
  * Contains all user-configurable settings that should be persisted.
@@ -16,11 +18,13 @@ public class UserConfiguration {
     private String frontPattern = ".*front.*";
     private String rearPattern = ".*rear.*";
     private String overviewPattern = ".*scene.*";
+    private PatternBuilderConfig patternBuilderConfig;
     
     /**
      * Creates a new UserConfiguration with default values.
      */
     public UserConfiguration() {
+        this.patternBuilderConfig = new PatternBuilderConfig();
     }
     
     /**
@@ -29,7 +33,7 @@ public class UserConfiguration {
     public UserConfiguration(String inputFolder, String serviceUrl, boolean tlsEnabled, 
                            boolean insecureAllowed, String csvDirectory, int maxParallel,
                            String groupPattern, String frontPattern, String rearPattern, 
-                           String overviewPattern) {
+                           String overviewPattern, PatternBuilderConfig patternBuilderConfig) {
         this.inputFolder = inputFolder;
         this.serviceUrl = serviceUrl;
         this.tlsEnabled = tlsEnabled;
@@ -40,6 +44,7 @@ public class UserConfiguration {
         this.frontPattern = frontPattern;
         this.rearPattern = rearPattern;
         this.overviewPattern = overviewPattern;
+        this.patternBuilderConfig = patternBuilderConfig != null ? patternBuilderConfig : new PatternBuilderConfig();
     }
     
     // Getters
@@ -53,6 +58,7 @@ public class UserConfiguration {
     public String getFrontPattern() { return frontPattern; }
     public String getRearPattern() { return rearPattern; }
     public String getOverviewPattern() { return overviewPattern; }
+    public PatternBuilderConfig getPatternBuilderConfig() { return patternBuilderConfig; }
     
     // Setters
     public void setInputFolder(String inputFolder) { this.inputFolder = inputFolder; }
@@ -65,6 +71,9 @@ public class UserConfiguration {
     public void setFrontPattern(String frontPattern) { this.frontPattern = frontPattern; }
     public void setRearPattern(String rearPattern) { this.rearPattern = rearPattern; }
     public void setOverviewPattern(String overviewPattern) { this.overviewPattern = overviewPattern; }
+    public void setPatternBuilderConfig(PatternBuilderConfig patternBuilderConfig) { 
+        this.patternBuilderConfig = patternBuilderConfig != null ? patternBuilderConfig : new PatternBuilderConfig(); 
+    }
     
     /**
      * Creates a builder for constructing UserConfiguration instances.
@@ -99,7 +108,8 @@ public class UserConfiguration {
                 existing.inputFolder, existing.serviceUrl, existing.tlsEnabled,
                 existing.insecureAllowed, existing.csvDirectory, existing.maxParallel,
                 existing.groupPattern, existing.frontPattern, existing.rearPattern,
-                existing.overviewPattern
+                existing.overviewPattern, existing.patternBuilderConfig != null ? 
+                existing.patternBuilderConfig.copy() : new PatternBuilderConfig()
             );
         }
         
@@ -153,12 +163,17 @@ public class UserConfiguration {
             return this;
         }
         
+        public Builder setPatternBuilderConfig(PatternBuilderConfig patternBuilderConfig) {
+            config.patternBuilderConfig = patternBuilderConfig != null ? patternBuilderConfig : new PatternBuilderConfig();
+            return this;
+        }
+        
         public UserConfiguration build() {
             return new UserConfiguration(
                 config.inputFolder, config.serviceUrl, config.tlsEnabled,
                 config.insecureAllowed, config.csvDirectory, config.maxParallel,
                 config.groupPattern, config.frontPattern, config.rearPattern,
-                config.overviewPattern
+                config.overviewPattern, config.patternBuilderConfig
             );
         }
     }
