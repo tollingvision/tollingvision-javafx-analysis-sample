@@ -31,7 +31,7 @@ if (java.nio.file.Files.exists(directory) && java.nio.file.Files.isDirectory(dir
 ### 4. Completely Rewrote `analyzeSampleFiles()` Method
 **Before:** Only simulated files for testing
 
-**After:** 
+**After:**
 - Reads actual image files from the specified directory
 - Performs real tokenization using `FilenameTokenizer`
 - Enhances analysis with custom tokens
@@ -79,7 +79,7 @@ try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.lis
             .filter(this::isImageFile)
             .limit(500)
             .toList();
-    
+
     sampleFilenames.addAll(imageFiles);
 }
 ```
@@ -88,7 +88,7 @@ try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.lis
 Now generates all required patterns:
 - Group pattern with capturing groups
 - Front role pattern
-- Rear role pattern  
+- Rear role pattern
 - Overview role pattern
 
 ## Task 15 Integration Maintained

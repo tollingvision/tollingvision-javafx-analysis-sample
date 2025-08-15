@@ -2,8 +2,6 @@ package com.smartcloudsolutions.tollingvision.samples.patternbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -33,9 +31,11 @@ import javafx.scene.text.FontWeight;
 
 /**
  * UI component that provides real-time preview of pattern matching results.
- * Shows how filenames will be categorized using the current configuration
- * and provides summary statistics and validation feedback.
- * Uses background processing and incremental updates for improved performance.
+ * Shows how filenames
+ * will be categorized using the current configuration and provides summary
+ * statistics and
+ * validation feedback. Uses background processing and incremental updates for
+ * improved performance.
  */
 public class PatternPreviewPane extends VBox {
 
@@ -64,7 +64,7 @@ public class PatternPreviewPane extends VBox {
 
     /**
      * Creates a new pattern preview pane.
-     * 
+     *
      * @param messages i18n messages
      */
     public PatternPreviewPane(java.util.ResourceBundle messages) {
@@ -88,125 +88,135 @@ public class PatternPreviewPane extends VBox {
         // Initial state
         updateSummaryDisplay();
     }
-    
+
     /**
      * Creates a new pattern preview pane with shared background service.
-     * 
+     *
      * @param backgroundService the background service to use for processing
-     * @param messages i18n messages
+     * @param messages          i18n messages
      */
-    public PatternPreviewPane(BackgroundAnalysisService backgroundService, java.util.ResourceBundle messages) {
+    public PatternPreviewPane(
+            BackgroundAnalysisService backgroundService, java.util.ResourceBundle messages) {
         this(messages);
         this.backgroundService = backgroundService;
     }
 
-    /**
-     * Creates and configures the preview table.
-     */
+    /** Creates and configures the preview table. */
     private TableView<FilenamePreview> createPreviewTable() {
         TableView<FilenamePreview> table = new TableView<>();
         table.setItems(previewData);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setRowFactory(tv -> {
-            TableRow<FilenamePreview> row = new TableRow<>();
-            row.itemProperty().addListener((obs, oldItem, newItem) -> {
-                if (newItem != null) {
-                    updateRowStyle(row, newItem);
-                }
-            });
-            return row;
-        });
+        table.setRowFactory(
+                tv -> {
+                    TableRow<FilenamePreview> row = new TableRow<>();
+                    row.itemProperty()
+                            .addListener(
+                                    (obs, oldItem, newItem) -> {
+                                        if (newItem != null) {
+                                            updateRowStyle(row, newItem);
+                                        }
+                                    });
+                    return row;
+                });
 
         // Filename column
-        TableColumn<FilenamePreview, String> filenameCol = new TableColumn<>("Filename");
+        TableColumn<FilenamePreview, String> filenameCol = new TableColumn<>(
+                messages.getString("preview.column.filename"));
         filenameCol.setCellValueFactory(new PropertyValueFactory<>("filename"));
         filenameCol.setPrefWidth(200);
 
         // Group ID column
-        TableColumn<FilenamePreview, String> groupIdCol = new TableColumn<>("Group ID");
+        TableColumn<FilenamePreview, String> groupIdCol = new TableColumn<>(
+                messages.getString("preview.column.group.id"));
         groupIdCol.setCellValueFactory(new PropertyValueFactory<>("groupId"));
         groupIdCol.setPrefWidth(100);
-        groupIdCol.setCellFactory(col -> new TableCell<FilenamePreview, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    // Highlight missing group IDs
-                    if (item.trim().isEmpty()) {
-                        setTextFill(Color.RED);
-                        setText("(none)");
-                    } else {
-                        setTextFill(Color.BLACK);
+        groupIdCol.setCellFactory(
+                col -> new TableCell<FilenamePreview, String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                            setStyle("");
+                        } else {
+                            setText(item);
+                            // Highlight missing group IDs
+                            if (item.trim().isEmpty()) {
+                                setTextFill(Color.RED);
+                                setText(messages.getString("common.none"));
+                            } else {
+                                setTextFill(Color.BLACK);
+                            }
+                        }
                     }
-                }
-            }
-        });
+                });
 
         // Role column
-        TableColumn<FilenamePreview, ImageRole> roleCol = new TableColumn<>("Role");
+        TableColumn<FilenamePreview, ImageRole> roleCol = new TableColumn<>(messages.getString("preview.column.role"));
         roleCol.setCellValueFactory(new PropertyValueFactory<>("role"));
         roleCol.setPrefWidth(80);
-        roleCol.setCellFactory(col -> new TableCell<FilenamePreview, ImageRole>() {
-            @Override
-            protected void updateItem(ImageRole item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText("(none)");
-                    setTextFill(Color.GRAY);
-                } else {
-                    setText(item.toString());
-                    // Color-code roles
-                    switch (item) {
-                        case OVERVIEW:
-                            setTextFill(Color.BLUE);
-                            break;
-                        case FRONT:
-                            setTextFill(Color.GREEN);
-                            break;
-                        case REAR:
-                            setTextFill(Color.ORANGE);
-                            break;
+        roleCol.setCellFactory(
+                col -> new TableCell<FilenamePreview, ImageRole>() {
+                    @Override
+                    protected void updateItem(ImageRole item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(messages.getString("common.none"));
+                            setTextFill(Color.GRAY);
+                        } else {
+                            setText(item.toString());
+                            // Color-code roles
+                            switch (item) {
+                                case OVERVIEW:
+                                    setTextFill(Color.BLUE);
+                                    break;
+                                case FRONT:
+                                    setTextFill(Color.GREEN);
+                                    break;
+                                case REAR:
+                                    setTextFill(Color.ORANGE);
+                                    break;
+                            }
+                        }
                     }
-                }
-            }
-        });
+                });
 
         // Status column
-        TableColumn<FilenamePreview, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(cellData -> {
-            FilenamePreview preview = cellData.getValue();
-            if (preview.hasError()) {
-                return new ReadOnlyObjectWrapper<>("Error: " + preview.getErrorMessage());
-            } else if (preview.isMatched()) {
-                return new ReadOnlyObjectWrapper<>("Matched");
-            } else {
-                return new ReadOnlyObjectWrapper<>("Unmatched");
-            }
-        });
-        statusCol.setPrefWidth(150);
-        statusCol.setCellFactory(col -> new TableCell<FilenamePreview, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    if (item.startsWith("Error:")) {
-                        setTextFill(Color.RED);
-                    } else if (item.equals("Matched")) {
-                        setTextFill(Color.GREEN);
+        TableColumn<FilenamePreview, String> statusCol = new TableColumn<>(messages.getString("preview.column.status"));
+        statusCol.setCellValueFactory(
+                cellData -> {
+                    FilenamePreview preview = cellData.getValue();
+                    if (preview.hasError()) {
+                        return new ReadOnlyObjectWrapper<>(
+                                String.format(
+                                        messages.getString("preview.status.error"), preview.getErrorMessage()));
+                    } else if (preview.isMatched()) {
+                        return new ReadOnlyObjectWrapper<>(messages.getString("preview.status.matched"));
                     } else {
-                        setTextFill(Color.GRAY);
+                        return new ReadOnlyObjectWrapper<>(messages.getString("preview.status.unmatched"));
                     }
-                }
-            }
-        });
+                });
+        statusCol.setPrefWidth(150);
+        statusCol.setCellFactory(
+                col -> new TableCell<FilenamePreview, String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                            setStyle("");
+                        } else {
+                            setText(item);
+                            if (item.startsWith("Error:")) {
+                                setTextFill(Color.RED);
+                            } else if (item.equals(messages.getString("preview.status.matched"))) {
+                                setTextFill(Color.GREEN);
+                            } else {
+                                setTextFill(Color.GRAY);
+                            }
+                        }
+                    }
+                });
 
         table.getColumns().add(filenameCol);
         table.getColumns().add(groupIdCol);
@@ -215,9 +225,7 @@ public class PatternPreviewPane extends VBox {
         return table;
     }
 
-    /**
-     * Updates the visual style of a table row based on the preview data.
-     */
+    /** Updates the visual style of a table row based on the preview data. */
     private void updateRowStyle(TableRow<FilenamePreview> row, FilenamePreview preview) {
         row.getStyleClass().removeAll("preview-error", "preview-warning", "preview-success");
 
@@ -230,29 +238,23 @@ public class PatternPreviewPane extends VBox {
         }
     }
 
-    /**
-     * Creates the summary label for displaying statistics.
-     */
+    /** Creates the summary label for displaying statistics. */
     private Label createSummaryLabel() {
-        Label label = new Label("No files to preview");
+        Label label = new Label(messages.getString("preview.status.empty"));
         label.setFont(Font.font("System", FontWeight.BOLD, 12));
         label.setWrapText(true);
         return label;
     }
 
-    /**
-     * Creates the status label for displaying processing status.
-     */
+    /** Creates the status label for displaying processing status. */
     private Label createStatusLabel() {
-        Label label = new Label("Ready");
+        Label label = new Label(messages.getString("status.ready"));
         label.setFont(Font.font("System", 10));
         label.setTextFill(Color.GRAY);
         return label;
     }
 
-    /**
-     * Creates the list view for displaying unmatched files.
-     */
+    /** Creates the list view for displaying unmatched files. */
     private ListView<String> createUnmatchedFilesList() {
         ListView<String> listView = new ListView<>();
         listView.setPrefHeight(100);
@@ -261,28 +263,22 @@ public class PatternPreviewPane extends VBox {
         return listView;
     }
 
-    /**
-     * Creates the refresh button.
-     */
+    /** Creates the refresh button. */
     private Button createRefreshButton() {
-        Button button = new Button("Refresh Preview");
+        Button button = new Button(messages.getString("preview.button.refresh"));
         button.setOnAction(e -> refreshPreview());
         return button;
     }
-    
-    /**
-     * Creates the cancel button.
-     */
+
+    /** Creates the cancel button. */
     private Button createCancelButton() {
-        Button button = new Button("Cancel");
+        Button button = new Button(messages.getString("preview.button.cancel"));
         button.setVisible(false);
         button.setOnAction(e -> cancelPreviewUpdate());
         return button;
     }
 
-    /**
-     * Sets up the layout of the preview pane.
-     */
+    /** Sets up the layout of the preview pane. */
     private void setupLayout() {
         setSpacing(10);
         setPadding(new Insets(10));
@@ -307,7 +303,7 @@ public class PatternPreviewPane extends VBox {
         VBox.setVgrow(previewTable, Priority.ALWAYS);
 
         // Unmatched files section (initially hidden)
-        Label unmatchedLabel = new Label("Unmatched Files:");
+        Label unmatchedLabel = new Label(messages.getString("preview.label.unmatched"));
         unmatchedLabel.setFont(Font.font("System", FontWeight.BOLD, 11));
         unmatchedLabel.visibleProperty().bind(unmatchedFilesList.visibleProperty());
         unmatchedLabel.managedProperty().bind(unmatchedFilesList.managedProperty());
@@ -316,9 +312,10 @@ public class PatternPreviewPane extends VBox {
     }
 
     /**
-     * Updates the preview with the current configuration and filenames.
-     * This method processes filenames in the background to avoid blocking the UI.
-     * 
+     * Updates the preview with the current configuration and filenames. This method
+     * processes
+     * filenames in the background to avoid blocking the UI.
+     *
      * @param config    the pattern configuration to use
      * @param filenames the list of filenames to process
      */
@@ -343,13 +340,12 @@ public class PatternPreviewPane extends VBox {
         updateSummaryDisplay();
 
         if (filenames.isEmpty()) {
-            setStatus("No files to preview");
+            setStatus(messages.getString("preview.status.empty"));
             return;
         }
 
         // Limit the number of files for performance
-        List<String> limitedFilenames = filenames.size() > MAX_PREVIEW_ROWS
-                ? filenames.subList(0, MAX_PREVIEW_ROWS)
+        List<String> limitedFilenames = filenames.size() > MAX_PREVIEW_ROWS ? filenames.subList(0, MAX_PREVIEW_ROWS)
                 : filenames;
 
         // Use background service if available, otherwise fallback to local processing
@@ -364,35 +360,46 @@ public class PatternPreviewPane extends VBox {
         statusLabel.textProperty().bind(currentTask.messageProperty());
 
         // Handle task completion
-        currentTask.setOnSucceeded(e -> {
-            List<FilenamePreview> previews = currentTask.getValue();
-            previewData.setAll(previews);
-            currentSummary = new PreviewSummary(previews, messages);
-            updateSummaryDisplay();
-            
-            resetPreviewUI();
-            
-            if (currentFilenames.size() > MAX_PREVIEW_ROWS) {
-                setStatus(String.format("Showing first %d of %d files",
-                        MAX_PREVIEW_ROWS, currentFilenames.size()));
-            } else {
-                setStatus("Preview updated");
-            }
-        });
+        currentTask.setOnSucceeded(
+                e -> {
+                    List<FilenamePreview> previews = currentTask.getValue();
+                    if (previews != null) {
+                        previewData.setAll(previews);
+                    }
+                    currentSummary = new PreviewSummary(previews, messages);
+                    updateSummaryDisplay();
 
-        currentTask.setOnFailed(e -> {
-            resetPreviewUI();
-            setStatus("Preview update failed: " + currentTask.getException().getMessage());
-        });
+                    resetPreviewUI();
 
-        currentTask.setOnCancelled(e -> {
-            resetPreviewUI();
-            setStatus("Preview update cancelled");
-        });
+                    if (currentFilenames.size() > MAX_PREVIEW_ROWS) {
+                        setStatus(
+                                String.format(
+                                        messages.getString("preview.status.showing.first"),
+                                        MAX_PREVIEW_ROWS,
+                                        currentFilenames.size()));
+                    } else {
+                        setStatus(messages.getString("preview.status.updated"));
+                    }
+                });
+
+        currentTask.setOnFailed(
+                e -> {
+                    resetPreviewUI();
+                    setStatus(
+                            String.format(
+                                    messages.getString("preview.status.failed"),
+                                    currentTask.getException().getMessage()));
+                });
+
+        currentTask.setOnCancelled(
+                e -> {
+                    resetPreviewUI();
+                    setStatus(messages.getString("preview.status.cancelled"));
+                });
 
         // Start processing
         setPreviewUIRunning();
-        
+
         if (backgroundService != null) {
             backgroundService.executePreviewTask(currentTask);
         } else {
@@ -403,16 +410,18 @@ public class PatternPreviewPane extends VBox {
     }
 
     /**
-     * Creates a background task to process filenames and generate previews.
-     * This is a fallback method when no background service is available.
+     * Creates a background task to process filenames and generate previews. This is
+     * a fallback method
+     * when no background service is available.
      */
-    private Task<List<FilenamePreview>> createPreviewTask(PatternConfiguration config, List<String> filenames) {
+    private Task<List<FilenamePreview>> createPreviewTask(
+            PatternConfiguration config, List<String> filenames) {
         return new Task<List<FilenamePreview>>() {
             @Override
             protected List<FilenamePreview> call() throws Exception {
-                updateMessage("Processing preview...");
+                updateMessage(messages.getString("preview.task.processing"));
                 updateProgress(0, 100);
-                
+
                 List<FilenamePreview> previews = new ArrayList<>();
 
                 for (int i = 0; i < filenames.size(); i++) {
@@ -426,19 +435,19 @@ public class PatternPreviewPane extends VBox {
 
                     // Update progress
                     updateProgress(i + 1, filenames.size());
-                    updateMessage(String.format("Processed %d of %d files", i + 1, filenames.size()));
+                    updateMessage(
+                            String.format(
+                                    messages.getString("preview.task.processed.count"), i + 1, filenames.size()));
                 }
 
-                updateMessage("Preview processing complete");
+                updateMessage(messages.getString("preview.task.completed"));
                 updateProgress(100, 100);
                 return previews;
             }
         };
     }
 
-    /**
-     * Processes a single filename and creates a preview entry.
-     */
+    /** Processes a single filename and creates a preview entry. */
     private FilenamePreview processFilename(String filename, PatternConfiguration config) {
         FilenamePreview preview = new FilenamePreview(filename);
 
@@ -458,19 +467,18 @@ public class PatternPreviewPane extends VBox {
             if (matched) {
                 preview.setSuccess(groupId, role);
             } else {
-                preview.setError("Could not extract group ID");
+                preview.setError(messages.getString("preview.error.no.group.id"));
             }
 
         } catch (Exception e) {
-            preview.setError("Processing error: " + e.getMessage());
+            preview.setError(
+                    String.format(messages.getString("preview.error.processing"), e.getMessage()));
         }
 
         return preview;
     }
 
-    /**
-     * Extracts the group ID from a filename using the group pattern.
-     */
+    /** Extracts the group ID from a filename using the group pattern. */
     private String extractGroupId(String filename, String groupPattern) {
         if (groupPattern == null || groupPattern.trim().isEmpty()) {
             return null;
@@ -491,12 +499,10 @@ public class PatternPreviewPane extends VBox {
         return null;
     }
 
-    /**
-     * Updates the summary display with current statistics.
-     */
+    /** Updates the summary display with current statistics. */
     private void updateSummaryDisplay() {
         if (currentSummary == null) {
-            summaryLabel.setText("No files to preview");
+            summaryLabel.setText(messages.getString("preview.status.empty"));
             unmatchedFilesList.setVisible(false);
             unmatchedFilesList.setManaged(false);
             return;
@@ -526,16 +532,16 @@ public class PatternPreviewPane extends VBox {
         }
     }
 
-    /**
-     * Sets the status message.
-     */
+    /** Sets the status message. */
     private void setStatus(String status) {
+        // Ensure we are not setting text while bound to a task message
+        if (statusLabel.textProperty().isBound()) {
+            statusLabel.textProperty().unbind();
+        }
         statusLabel.setText(status);
     }
 
-    /**
-     * Refreshes the preview with the current configuration and filenames.
-     */
+    /** Refreshes the preview with the current configuration and filenames. */
     public void refreshPreview() {
         if (currentConfig != null && currentFilenames != null) {
             updatePreview(currentConfig, currentFilenames);
@@ -556,9 +562,7 @@ public class PatternPreviewPane extends VBox {
         return new ArrayList<>(previewData);
     }
 
-    /**
-     * Clears the preview data and resets the display.
-     */
+    /** Clears the preview data and resets the display. */
     public void clearPreview() {
         previewData.clear();
         currentSummary = null;
@@ -569,14 +573,15 @@ public class PatternPreviewPane extends VBox {
     }
 
     /**
-     * Updates the preview using a GroupingResult from the GroupingEngine.
-     * This provides more accurate preview with proper role assignment and unmatched
-     * reasons.
-     * 
+     * Updates the preview using a GroupingResult from the GroupingEngine. This
+     * provides more accurate
+     * preview with proper role assignment and unmatched reasons.
+     *
      * @param result       the grouping result from GroupingEngine
      * @param allFilenames all filenames that were processed
      */
-    public void updatePreviewWithGroupingResult(GroupingEngine.GroupingResult result, List<String> allFilenames) {
+    public void updatePreviewWithGroupingResult(
+            GroupingEngine.GroupingResult result, List<String> allFilenames) {
         // Cancel any running task
         if (currentTask != null && !currentTask.isDone()) {
             currentTask.cancel(true);
@@ -603,7 +608,7 @@ public class PatternPreviewPane extends VBox {
             String reason = result.getUnmatchedReasons().get(filename);
 
             FilenamePreview preview = new FilenamePreview(filename);
-            preview.setError(reason != null ? reason : "No match");
+            preview.setError(reason != null ? reason : messages.getString("preview.error.no.match"));
 
             previews.add(preview);
         }
@@ -615,34 +620,36 @@ public class PatternPreviewPane extends VBox {
 
         // Update UI
         final List<FilenamePreview> finalPreviews = previews;
-        Platform.runLater(() -> {
-            previewData.setAll(finalPreviews);
-            currentSummary = new PreviewSummary(finalPreviews, messages);
-            updateSummaryDisplay();
+        Platform.runLater(
+                () -> {
+                    previewData.setAll(finalPreviews);
+                    currentSummary = new PreviewSummary(finalPreviews, messages);
+                    updateSummaryDisplay();
 
-            // Update unmatched files list
-            List<String> unmatchedFiles = result.getUnmatchedFiles();
-            if (!unmatchedFiles.isEmpty()) {
-                unmatchedFilesList.getItems().setAll(unmatchedFiles);
-                unmatchedFilesList.setVisible(true);
-                unmatchedFilesList.setManaged(true);
-            } else {
-                unmatchedFilesList.setVisible(false);
-                unmatchedFilesList.setManaged(false);
-            }
+                    // Update unmatched files list
+                    List<String> unmatchedFiles = result.getUnmatchedFiles();
+                    if (!unmatchedFiles.isEmpty()) {
+                        unmatchedFilesList.getItems().setAll(unmatchedFiles);
+                        unmatchedFilesList.setVisible(true);
+                        unmatchedFilesList.setManaged(true);
+                    } else {
+                        unmatchedFilesList.setVisible(false);
+                        unmatchedFilesList.setManaged(false);
+                    }
 
-            if (allFilenames.size() > MAX_PREVIEW_ROWS) {
-                setStatus(String.format("Showing first %d of %d files",
-                        MAX_PREVIEW_ROWS, allFilenames.size()));
-            } else {
-                setStatus("Preview updated with grouping results");
-            }
-        });
+                    if (allFilenames.size() > MAX_PREVIEW_ROWS) {
+                        setStatus(
+                                String.format(
+                                        messages.getString("preview.status.showing.first"),
+                                        MAX_PREVIEW_ROWS,
+                                        allFilenames.size()));
+                    } else {
+                        setStatus(messages.getString("preview.status.updated.grouping"));
+                    }
+                });
     }
 
-    /**
-     * Cancels the current preview update operation.
-     */
+    /** Cancels the current preview update operation. */
     private void cancelPreviewUpdate() {
         if (currentTask != null && !currentTask.isDone()) {
             currentTask.cancel(true);
@@ -651,19 +658,15 @@ public class PatternPreviewPane extends VBox {
             backgroundService.cancelAllTasks();
         }
     }
-    
-    /**
-     * Sets UI to running state during preview processing.
-     */
+
+    /** Sets UI to running state during preview processing. */
     private void setPreviewUIRunning() {
         progressIndicator.setVisible(true);
         cancelButton.setVisible(true);
         refreshButton.setDisable(true);
     }
-    
-    /**
-     * Resets UI to ready state after preview completion.
-     */
+
+    /** Resets UI to ready state after preview completion. */
     private void resetPreviewUI() {
         progressIndicator.setVisible(false);
         progressIndicator.progressProperty().unbind();
@@ -671,10 +674,10 @@ public class PatternPreviewPane extends VBox {
         cancelButton.setVisible(false);
         refreshButton.setDisable(false);
     }
-    
+
     /**
      * Sets the background service to use for processing.
-     * 
+     *
      * @param backgroundService the background service
      */
     public void setBackgroundService(BackgroundAnalysisService backgroundService) {
@@ -682,8 +685,9 @@ public class PatternPreviewPane extends VBox {
     }
 
     /**
-     * Cleanup method to shut down background processing.
-     * Should be called when the preview pane is no longer needed.
+     * Cleanup method to shut down background processing. Should be called when the
+     * preview pane is no
+     * longer needed.
      */
     public void shutdown() {
         if (currentTask != null && !currentTask.isDone()) {

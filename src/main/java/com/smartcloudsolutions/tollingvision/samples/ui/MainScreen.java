@@ -49,8 +49,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 /**
- * Main screen UI for the TollingVision application.
- * Contains the configuration form, status counters, and event log.
+ * Main screen UI for the TollingVision application. Contains the configuration
+ * form, status
+ * counters, and event log.
  */
 public class MainScreen {
 
@@ -97,15 +98,18 @@ public class MainScreen {
     private Runnable onStopProcessing;
 
     public static void addIcon(Stage stage) {
-        stage.getIcons().addAll(new Image(MainScreen.class.getResourceAsStream("/assets/logo_16_16.png")),
-        new Image(MainScreen.class.getResourceAsStream("/assets/logo_32_32.png")),
-        new Image(MainScreen.class.getResourceAsStream("/assets/logo_48_48.png")),
-        new Image(MainScreen.class.getResourceAsStream("/assets/logo_128_128.png")));
+        stage
+                .getIcons()
+                .addAll(
+                        new Image(MainScreen.class.getResourceAsStream("/assets/logo_16_16.png")),
+                        new Image(MainScreen.class.getResourceAsStream("/assets/logo_32_32.png")),
+                        new Image(MainScreen.class.getResourceAsStream("/assets/logo_48_48.png")),
+                        new Image(MainScreen.class.getResourceAsStream("/assets/logo_128_128.png")));
     }
 
     /**
      * Creates a new MainScreen with the specified stage and resource bundle.
-     * 
+     *
      * @param primaryStage the primary stage for the application
      * @param messages     resource bundle for internationalization
      */
@@ -152,25 +156,27 @@ public class MainScreen {
 
     private void setupEventHandlers() {
         // Event log keyboard handling
-        logList.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                ImageGroupResult selected = logList.getSelectionModel().getSelectedItem();
-                if (selected != null && !selected.getAllImagePaths().isEmpty()) {
-                    openGallery(selected);
-                }
-                event.consume();
-            }
-        });
+        logList.setOnKeyPressed(
+                event -> {
+                    if (event.getCode() == KeyCode.ENTER) {
+                        ImageGroupResult selected = logList.getSelectionModel().getSelectedItem();
+                        if (selected != null && !selected.getAllImagePaths().isEmpty()) {
+                            openGallery(selected);
+                        }
+                        event.consume();
+                    }
+                });
 
         // Event log mouse handling
-        logList.setOnMouseClicked(ev -> {
-            if (ev.getButton() == MouseButton.PRIMARY && ev.getClickCount() == 2) {
-                ImageGroupResult selected = logList.getSelectionModel().getSelectedItem();
-                if (selected != null && !selected.getAllImagePaths().isEmpty()) {
-                    openGallery(selected);
-                }
-            }
-        });
+        logList.setOnMouseClicked(
+                ev -> {
+                    if (ev.getButton() == MouseButton.PRIMARY && ev.getClickCount() == 2) {
+                        ImageGroupResult selected = logList.getSelectionModel().getSelectedItem();
+                        if (selected != null && !selected.getAllImagePaths().isEmpty()) {
+                            openGallery(selected);
+                        }
+                    }
+                });
     }
 
     private HBox createHeader() {
@@ -286,17 +292,23 @@ public class MainScreen {
         updatePatternBuilderButtonState(patternBuilderBtn);
 
         // Listen for changes to input folder to update button state
-        dirField.textProperty().addListener((obs, oldVal, newVal) -> {
-            updatePatternBuilderButtonState(patternBuilderBtn);
-        });
+        dirField
+                .textProperty()
+                .addListener(
+                        (obs, oldVal, newVal) -> {
+                            updatePatternBuilderButtonState(patternBuilderBtn);
+                        });
 
         HBox patternBuilderRow = new HBox(10);
-        patternBuilderRow.getChildren().addAll(new Label(messages.getString("label.visual.builder")),
-                patternBuilderBtn);
+        patternBuilderRow
+                .getChildren()
+                .addAll(new Label(messages.getString("label.visual.builder")), patternBuilderBtn);
         patternBuilderRow.setAlignment(Pos.CENTER_LEFT);
 
-        section.getChildren().addAll(sectionTitle, folderRow, groupRow, frontRow, rearRow, overviewRow,
-                patternBuilderRow);
+        section
+                .getChildren()
+                .addAll(
+                        sectionTitle, folderRow, groupRow, frontRow, rearRow, overviewRow, patternBuilderRow);
         return section;
     }
 
@@ -343,7 +355,9 @@ public class MainScreen {
         // Control buttons
         HBox controlButtons = createControlButtons();
 
-        section.getChildren().addAll(sectionTitle, urlRow, securityBox, threadsRow, exportRow, controlButtons);
+        section
+                .getChildren()
+                .addAll(sectionTitle, urlRow, securityBox, threadsRow, exportRow, controlButtons);
         return section;
     }
 
@@ -354,21 +368,23 @@ public class MainScreen {
 
         // Dynamic tooltip based on button state
         updateStartButtonTooltip();
-        startBtn.setOnAction(e -> {
-            if (onStartProcessing != null) {
-                onStartProcessing.run();
-            }
-        });
+        startBtn.setOnAction(
+                e -> {
+                    if (onStartProcessing != null) {
+                        onStartProcessing.run();
+                    }
+                });
 
         stopBtn.setText(messages.getString("button.stop"));
         stopBtn.setTooltip(new Tooltip(messages.getString("button.stop.tooltip")));
         stopBtn.getStyleClass().addAll("button", "button-secondary");
         stopBtn.disableProperty().bind(processing.not());
-        stopBtn.setOnAction(e -> {
-            if (onStopProcessing != null) {
-                onStopProcessing.run();
-            }
-        });
+        stopBtn.setOnAction(
+                e -> {
+                    if (onStopProcessing != null) {
+                        onStopProcessing.run();
+                    }
+                });
 
         progressBar.setPrefWidth(200);
         progressBar.setVisible(false);
@@ -434,13 +450,14 @@ public class MainScreen {
 
         logList.getStyleClass().add("event-log");
         logList.setPrefHeight(200);
-        logList.setCellFactory(list -> new ListCell<>() {
-            @Override
-            protected void updateItem(ImageGroupResult item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getDisplayText());
-            }
-        });
+        logList.setCellFactory(
+                list -> new ListCell<>() {
+                    @Override
+                    protected void updateItem(ImageGroupResult item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(empty || item == null ? "" : item.getDisplayText());
+                    }
+                });
 
         logSection.getChildren().addAll(logTitle, logList);
         VBox.setVgrow(logList, Priority.ALWAYS); // Make list expand
@@ -486,7 +503,7 @@ public class MainScreen {
 
     private void chooseCsvDirectory() {
         DirectoryChooser dc = new DirectoryChooser();
-        dc.setTitle("Select CSV Output Directory");
+        dc.setTitle(messages.getString("dialog.csv.select.title"));
 
         // Set initial directory to current CSV directory if set
         String csvDir = csvField.getText().trim();
@@ -505,9 +522,7 @@ public class MainScreen {
         }
     }
 
-    /**
-     * Updates the Pattern Builder button state based on input folder validity.
-     */
+    /** Updates the Pattern Builder button state based on input folder validity. */
     private void updatePatternBuilderButtonState(Button patternBuilderBtn) {
         String inputFolder = dirField.getText().trim();
         boolean isValidFolder = isValidInputFolder(inputFolder);
@@ -515,15 +530,15 @@ public class MainScreen {
         patternBuilderBtn.setDisable(!isValidFolder);
 
         if (isValidFolder) {
-            patternBuilderBtn.setTooltip(new Tooltip(messages.getString("tooltip.pattern.builder.enabled")));
+            patternBuilderBtn.setTooltip(
+                    new Tooltip(messages.getString("tooltip.pattern.builder.enabled")));
         } else {
-            patternBuilderBtn.setTooltip(new Tooltip(messages.getString("tooltip.pattern.builder.disabled")));
+            patternBuilderBtn.setTooltip(
+                    new Tooltip(messages.getString("tooltip.pattern.builder.disabled")));
         }
     }
 
-    /**
-     * Validates if the input folder is valid and accessible.
-     */
+    /** Validates if the input folder is valid and accessible. */
     private boolean isValidInputFolder(String folderPath) {
         if (folderPath == null || folderPath.trim().isEmpty()) {
             return false;
@@ -537,9 +552,7 @@ public class MainScreen {
         }
     }
 
-    /**
-     * Opens the Pattern Builder dialog for visual pattern configuration.
-     */
+    /** Opens the Pattern Builder dialog for visual pattern configuration. */
     private void openPatternBuilder() {
         String inputFolder = dirField.getText().trim();
 
@@ -558,27 +571,29 @@ public class MainScreen {
         MainScreen.addIcon(dialog);
 
         // Set callback to update pattern fields when configuration is complete
-        dialog.setOnConfigurationComplete(config -> {
-            // Update existing pattern fields with generated patterns
-            if (config.getGroupPattern() != null && !config.getGroupPattern().trim().isEmpty()) {
-                groupPatternField.setText(config.getGroupPattern());
-            }
-            if (config.getFrontPattern() != null && !config.getFrontPattern().trim().isEmpty()) {
-                frontPatternField.setText(config.getFrontPattern());
-            }
-            if (config.getRearPattern() != null && !config.getRearPattern().trim().isEmpty()) {
-                rearPatternField.setText(config.getRearPattern());
-            }
-            if (config.getOverviewPattern() != null && !config.getOverviewPattern().trim().isEmpty()) {
-                overviewPatternField.setText(config.getOverviewPattern());
-            }
+        dialog.setOnConfigurationComplete(
+                config -> {
+                    // Update existing pattern fields with generated patterns
+                    if (config.getGroupPattern() != null && !config.getGroupPattern().trim().isEmpty()) {
+                        groupPatternField.setText(config.getGroupPattern());
+                    }
+                    if (config.getFrontPattern() != null && !config.getFrontPattern().trim().isEmpty()) {
+                        frontPatternField.setText(config.getFrontPattern());
+                    }
+                    if (config.getRearPattern() != null && !config.getRearPattern().trim().isEmpty()) {
+                        rearPatternField.setText(config.getRearPattern());
+                    }
+                    if (config.getOverviewPattern() != null
+                            && !config.getOverviewPattern().trim().isEmpty()) {
+                        overviewPatternField.setText(config.getOverviewPattern());
+                    }
 
-            // Update pattern builder config in user configuration
-            updatePatternBuilderConfig(config);
+                    // Update pattern builder config in user configuration
+                    updatePatternBuilderConfig(config);
 
-            // Configuration will be automatically saved by existing auto-save mechanism
-            saveConfiguration();
-        });
+                    // Configuration will be automatically saved by existing auto-save mechanism
+                    saveConfiguration();
+                });
 
         // Initialize with current patterns and pattern builder config
         PatternConfiguration currentConfig = getCurrentPatternConfiguration();
@@ -612,9 +627,7 @@ public class MainScreen {
         return config;
     }
 
-    /**
-     * Updates the pattern builder configuration from a PatternConfiguration.
-     */
+    /** Updates the pattern builder configuration from a PatternConfiguration. */
     private void updatePatternBuilderConfig(PatternConfiguration config) {
         try {
             UserConfiguration userConfig = configManager.loadConfiguration();
@@ -637,9 +650,10 @@ public class MainScreen {
     }
 
     /**
-     * Validates the current pattern configuration.
-     * This integrates with existing pattern validation logic.
-     * 
+     * Validates the current pattern configuration. This integrates with existing
+     * pattern validation
+     * logic.
+     *
      * @return true if patterns are valid, false otherwise
      */
     public boolean validatePatterns() {
@@ -681,9 +695,10 @@ public class MainScreen {
     }
 
     /**
-     * Handles backward compatibility for existing regex configurations.
-     * This method ensures that existing configurations continue to work
-     * when the pattern builder is introduced.
+     * Handles backward compatibility for existing regex configurations. This method
+     * ensures that
+     * existing configurations continue to work when the pattern builder is
+     * introduced.
      */
     private void handleBackwardCompatibility() {
         try {
@@ -707,14 +722,14 @@ public class MainScreen {
     }
 
     /**
-     * Shows Save As dialog for CSV file selection.
-     * This is used when user wants to override the default filename for current
-     * session.
+     * Shows Save As dialog for CSV file selection. This is used when user wants to
+     * override the
+     * default filename for current session.
      */
     public void showSaveAsDialog() {
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
-        fc.setTitle("Save CSV Results As");
+        fc.setTitle(messages.getString("dialog.csv.saveas.title"));
 
         // Set initial directory to the stored CSV directory
         String csvDir = csvField.getText().trim();
@@ -748,8 +763,9 @@ public class MainScreen {
 
     /**
      * Generates the default CSV filename using current date in Budapest time.
-     * Format: results-YYYY-MM-DD.csv
-     * 
+     * Format:
+     * results-YYYY-MM-DD.csv
+     *
      * @return the default CSV filename
      */
     private String getDefaultCsvFileName() {
@@ -761,7 +777,7 @@ public class MainScreen {
     // Getters for configuration values
     /**
      * Gets the input folder path.
-     * 
+     *
      * @return the input folder path
      */
     public String getInputFolder() {
@@ -770,7 +786,7 @@ public class MainScreen {
 
     /**
      * Gets the service URL.
-     * 
+     *
      * @return the service URL
      */
     public String getServiceUrl() {
@@ -779,7 +795,7 @@ public class MainScreen {
 
     /**
      * Checks if TLS is enabled.
-     * 
+     *
      * @return true if TLS is enabled
      */
     public boolean isTlsEnabled() {
@@ -788,7 +804,7 @@ public class MainScreen {
 
     /**
      * Checks if insecure connections are allowed.
-     * 
+     *
      * @return true if insecure connections are allowed
      */
     public boolean isInsecureAllowed() {
@@ -796,10 +812,10 @@ public class MainScreen {
     }
 
     /**
-     * Gets the CSV output file path.
-     * Returns the current session override if set, otherwise constructs default
-     * path.
-     * 
+     * Gets the CSV output file path. Returns the current session override if set,
+     * otherwise
+     * constructs default path.
+     *
      * @return the CSV output file path
      */
     public String getCsvOutput() {
@@ -821,7 +837,7 @@ public class MainScreen {
 
     /**
      * Gets the maximum parallel processing count.
-     * 
+     *
      * @return the maximum parallel processing count
      */
     public int getMaxParallel() {
@@ -830,7 +846,7 @@ public class MainScreen {
 
     /**
      * Gets the group pattern for image grouping.
-     * 
+     *
      * @return the group pattern
      */
     public String getGroupPattern() {
@@ -839,7 +855,7 @@ public class MainScreen {
 
     /**
      * Gets the front image pattern.
-     * 
+     *
      * @return the front image pattern
      */
     public String getFrontPattern() {
@@ -848,7 +864,7 @@ public class MainScreen {
 
     /**
      * Gets the rear image pattern.
-     * 
+     *
      * @return the rear image pattern
      */
     public String getRearPattern() {
@@ -857,7 +873,7 @@ public class MainScreen {
 
     /**
      * Gets the overview image pattern.
-     * 
+     *
      * @return the overview image pattern
      */
     public String getOverviewPattern() {
@@ -867,7 +883,7 @@ public class MainScreen {
     // Pattern field getters for testing
     /**
      * Gets the group pattern field for testing purposes.
-     * 
+     *
      * @return the group pattern text field
      */
     TextField getGroupPatternField() {
@@ -876,7 +892,7 @@ public class MainScreen {
 
     /**
      * Gets the front pattern field for testing purposes.
-     * 
+     *
      * @return the front pattern text field
      */
     TextField getFrontPatternField() {
@@ -885,7 +901,7 @@ public class MainScreen {
 
     /**
      * Gets the rear pattern field for testing purposes.
-     * 
+     *
      * @return the rear pattern text field
      */
     TextField getRearPatternField() {
@@ -894,7 +910,7 @@ public class MainScreen {
 
     /**
      * Gets the overview pattern field for testing purposes.
-     * 
+     *
      * @return the overview pattern text field
      */
     TextField getOverviewPatternField() {
@@ -903,7 +919,7 @@ public class MainScreen {
 
     /**
      * Gets the current pattern configuration for testing purposes.
-     * 
+     *
      * @return the current pattern configuration
      */
     PatternConfiguration getPatternConfigurationForTesting() {
@@ -913,7 +929,7 @@ public class MainScreen {
     // Property getters
     /**
      * Gets the processing property for binding.
-     * 
+     *
      * @return the processing boolean property
      */
     public BooleanProperty processingProperty() {
@@ -922,7 +938,7 @@ public class MainScreen {
 
     /**
      * Gets the groups discovered property for binding.
-     * 
+     *
      * @return the groups discovered integer property
      */
     public IntegerProperty groupsDiscoveredProperty() {
@@ -931,7 +947,7 @@ public class MainScreen {
 
     /**
      * Gets the requests sent property for binding.
-     * 
+     *
      * @return the requests sent integer property
      */
     public IntegerProperty requestsSentProperty() {
@@ -940,7 +956,7 @@ public class MainScreen {
 
     /**
      * Gets the successful responses property for binding.
-     * 
+     *
      * @return the successful responses integer property
      */
     public IntegerProperty responsesOkProperty() {
@@ -949,7 +965,7 @@ public class MainScreen {
 
     /**
      * Gets the error responses property for binding.
-     * 
+     *
      * @return the error responses integer property
      */
     public IntegerProperty responsesErrorProperty() {
@@ -958,7 +974,7 @@ public class MainScreen {
 
     /**
      * Gets the progress bar component.
-     * 
+     *
      * @return the progress bar
      */
     public ProgressBar getProgressBar() {
@@ -967,7 +983,7 @@ public class MainScreen {
 
     /**
      * Gets the observable list of log items.
-     * 
+     *
      * @return the log items list
      */
     public ObservableList<ImageGroupResult> getLogItems() {
@@ -977,7 +993,7 @@ public class MainScreen {
     // Event handlers
     /**
      * Sets the handler for start processing events.
-     * 
+     *
      * @param handler the handler to execute when processing starts
      */
     public void setOnStartProcessing(Runnable handler) {
@@ -986,16 +1002,14 @@ public class MainScreen {
 
     /**
      * Sets the handler for stop processing events.
-     * 
+     *
      * @param handler the handler to execute when processing stops
      */
     public void setOnStopProcessing(Runnable handler) {
         this.onStopProcessing = handler;
     }
 
-    /**
-     * Shows the main screen window.
-     */
+    /** Shows the main screen window. */
     public void show() {
         primaryStage.show();
     }
@@ -1017,9 +1031,7 @@ public class MainScreen {
         }
     }
 
-    /**
-     * Saves the current UI configuration to persistent storage.
-     */
+    /** Saves the current UI configuration to persistent storage. */
     public void saveConfiguration() {
         try {
             UserConfiguration config = getCurrentConfiguration();
@@ -1031,7 +1043,7 @@ public class MainScreen {
 
     /**
      * Applies a configuration to the UI fields.
-     * 
+     *
      * @param config the configuration to apply
      */
     private void applyConfiguration(UserConfiguration config) {
@@ -1056,7 +1068,7 @@ public class MainScreen {
 
     /**
      * Creates a configuration object from the current UI field values.
-     * 
+     *
      * @return the current configuration
      */
     private UserConfiguration getCurrentConfiguration() {
@@ -1085,15 +1097,16 @@ public class MainScreen {
                 .build();
     }
 
-    /**
-     * Sets up automatic configuration saving when fields change.
-     */
+    /** Sets up automatic configuration saving when fields change. */
     private void setupConfigurationAutoSave() {
         // Add listeners to save configuration when fields change
-        dirField.textProperty().addListener((obs, oldVal, newVal) -> {
-            saveConfiguration();
-            updateStartButtonTooltip();
-        });
+        dirField
+                .textProperty()
+                .addListener(
+                        (obs, oldVal, newVal) -> {
+                            saveConfiguration();
+                            updateStartButtonTooltip();
+                        });
         urlField.textProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
         tlsCheck.selectedProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
         insecureCheck.selectedProperty().addListener((obs, oldVal, newVal) -> saveConfiguration());
@@ -1108,15 +1121,13 @@ public class MainScreen {
         processing.addListener((obs, oldVal, newVal) -> updateStartButtonTooltip());
     }
 
-    /**
-     * Updates the start button tooltip based on current state.
-     */
+    /** Updates the start button tooltip based on current state. */
     private void updateStartButtonTooltip() {
         String tooltipText;
         if (processing.get()) {
-            tooltipText = "Processing is currently running";
+            tooltipText = messages.getString("tooltip.processing.running");
         } else if (dirField.getText().trim().isEmpty()) {
-            tooltipText = "Please select an input folder containing vehicle images";
+            tooltipText = messages.getString("tooltip.input.folder.required");
         } else {
             tooltipText = messages.getString("button.start.tooltip");
         }

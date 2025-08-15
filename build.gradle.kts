@@ -4,6 +4,7 @@ plugins {
     application
     id("org.openjfx.javafxplugin") version "0.1.0"
     id("org.beryx.jlink")          version "3.1.1"
+    id("com.diffplug.spotless") version "6.25.0"
 }
 
 dependencies {
@@ -64,5 +65,22 @@ jlink {
             os.isWindows  -> "exe"
             else          -> "deb"   // Linux
         }
+    }
+}
+
+// Code formatting and import ordering
+spotless {
+    java {
+        // Use Google Java Format for consistent formatting
+        googleJavaFormat("1.22.0").reflowLongStrings()
+        // Organize imports (remove unused, sort)
+        importOrder()
+        removeUnusedImports()
+        target("src/**/*.java")
+    }
+    format("misc") {
+        target("**/*.gradle", "**/*.md", "**/.gitignore")
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }

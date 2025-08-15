@@ -33,8 +33,9 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * Gallery window for displaying image analysis results.
- * Shows individual images with overlays, plate thumbnails, and analysis data.
+ * Gallery window for displaying image analysis results. Shows individual images
+ * with overlays,
+ * plate thumbnails, and analysis data.
  */
 public class GalleryWindow {
 
@@ -59,7 +60,7 @@ public class GalleryWindow {
 
     /**
      * Creates a new gallery window for the given image group result.
-     * 
+     *
      * @param result   the image group result containing analysis data
      * @param messages resource bundle for internationalization
      */
@@ -79,9 +80,7 @@ public class GalleryWindow {
         setupKeyboardHandling();
     }
 
-    /**
-     * Initializes the user interface components.
-     */
+    /** Initializes the user interface components. */
     private void initializeUI() {
         if (images.isEmpty()) {
             return;
@@ -112,41 +111,42 @@ public class GalleryWindow {
         galleryStage.setScene(scene);
     }
 
-    /**
-     * Sets up keyboard navigation for the gallery.
-     */
+    /** Sets up keyboard navigation for the gallery. */
     private void setupKeyboardHandling() {
-        galleryStage.getScene().setOnKeyPressed(event -> {
-            switch (event.getCode()) {
-                case LEFT:
-                case UP:
-                    navigateImage(-1);
-                    event.consume();
-                    break;
-                case RIGHT:
-                case DOWN:
-                    navigateImage(1);
-                    event.consume();
-                    break;
-                case ESCAPE:
-                    galleryStage.close();
-                    event.consume();
-                    break;
-                case ENTER:
-                    if (event.isControlDown()) {
-                        resetZoom();
-                        event.consume();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        });
+        galleryStage
+                .getScene()
+                .setOnKeyPressed(
+                        event -> {
+                            switch (event.getCode()) {
+                                case LEFT:
+                                case UP:
+                                    navigateImage(-1);
+                                    event.consume();
+                                    break;
+                                case RIGHT:
+                                case DOWN:
+                                    navigateImage(1);
+                                    event.consume();
+                                    break;
+                                case ESCAPE:
+                                    galleryStage.close();
+                                    event.consume();
+                                    break;
+                                case ENTER:
+                                    if (event.isControlDown()) {
+                                        resetZoom();
+                                        event.consume();
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+                        });
     }
 
     /**
      * Creates the enhanced summary section with 50/50 two-column layout.
-     * 
+     *
      * @return GridPane containing the summary section
      */
     private GridPane createEnhancedSummarySection() {
@@ -178,7 +178,7 @@ public class GalleryWindow {
 
     /**
      * Creates the ANPR and MMR summary column.
-     * 
+     *
      * @param result the image group result
      * @return VBox containing ANPR and MMR data
      */
@@ -202,7 +202,8 @@ public class GalleryWindow {
 
             if (!result.getFrontPlate().isEmpty()) {
                 String frontLine = buildPlateLine(result.getEventResult().getFrontPlate());
-                anprSection.getChildren()
+                anprSection
+                        .getChildren()
                         .add(new Label(String.format(messages.getString("gallery.plate.front"), frontLine)));
                 for (var plateAlt : result.getEventResult().getFrontPlateAlternativeList()) {
                     String plateAltLine = buildPlateLine(plateAlt);
@@ -214,7 +215,8 @@ public class GalleryWindow {
 
             if (!result.getRearPlate().isEmpty()) {
                 String rearLine = buildPlateLine(result.getEventResult().getRearPlate());
-                anprSection.getChildren()
+                anprSection
+                        .getChildren()
                         .add(new Label(String.format(messages.getString("gallery.plate.rear"), rearLine)));
                 for (var plateAlt : result.getEventResult().getRearPlateAlternativeList()) {
                     String plateAltLine = buildPlateLine(plateAlt);
@@ -303,12 +305,13 @@ public class GalleryWindow {
 
     /**
      * Creates the analysis data column with JSON output.
-     * 
+     *
      * @return VBox containing analysis data
      */
     private VBox createAnalysisDataColumn() {
         VBox column = new VBox(10);
-        column.setStyle("-fx-background-color: #f8f9fa; -fx-padding: 15px; -fx-background-radius: 8px;");
+        column.setStyle(
+                "-fx-background-color: #f8f9fa; -fx-padding: 15px; -fx-background-radius: 8px;");
 
         Label title = new Label(messages.getString("gallery.analysis.data"));
         title.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
@@ -323,14 +326,14 @@ public class GalleryWindow {
         try {
             // Use Protobuf JsonFormat for EventResult - no camelCase enforcement
             if (result.getEventResult() != null) {
-                String jsonString = JsonFormat.printer()
-                        .print(result.getEventResult());
+                String jsonString = JsonFormat.printer().print(result.getEventResult());
                 jsonTextArea.setText(jsonString);
             } else {
-                jsonTextArea.setText("No analysis data available for this event.");
+                jsonTextArea.setText(messages.getString("gallery.no.analysis.event"));
             }
         } catch (Exception e) {
-            jsonTextArea.setText("Error generating JSON: " + e.getMessage());
+            jsonTextArea.setText(
+                    String.format(messages.getString("gallery.error.json.generate"), e.getMessage()));
         }
 
         column.getChildren().addAll(title, jsonTextArea);
@@ -339,7 +342,7 @@ public class GalleryWindow {
 
     /**
      * Creates the thumbnail section with clickable image thumbnails.
-     * 
+     *
      * @return VBox containing the thumbnail strip
      */
     private VBox createThumbnailSection() {
@@ -348,7 +351,7 @@ public class GalleryWindow {
         thumbnailSection.setPrefWidth(160);
         thumbnailSection.getStyleClass().add("gallery-sidebar");
 
-        Label title = new Label("Image Gallery");
+        Label title = new Label(messages.getString("gallery.images.title"));
         title.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
 
         ScrollPane scrollPane = new ScrollPane();
@@ -386,13 +389,14 @@ public class GalleryWindow {
             }
 
             // Add click handler to navigate to this image
-            thumbnail.setOnMouseClicked(event -> {
-                currentImageIndex = imageIndex;
-                loadCurrentImage();
-                updateNavigationButtons();
-                updateThumbnailSelection();
-                resetZoom();
-            });
+            thumbnail.setOnMouseClicked(
+                    event -> {
+                        currentImageIndex = imageIndex;
+                        loadCurrentImage();
+                        updateNavigationButtons();
+                        updateThumbnailSelection();
+                        resetZoom();
+                    });
 
             // Add selection styling
             if (i == currentImageIndex) {
@@ -419,7 +423,7 @@ public class GalleryWindow {
 
     /**
      * Creates the image pagination section with zoom and pan controls.
-     * 
+     *
      * @return VBox containing the image display and controls
      */
     private VBox createImagePaginationSection() {
@@ -428,7 +432,7 @@ public class GalleryWindow {
         imageSection.setAlignment(Pos.CENTER);
 
         // Add "Current Image" header
-        Label currentImageHeader = new Label("Current Image");
+        Label currentImageHeader = new Label(messages.getString("gallery.current.header"));
         currentImageHeader.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #333;");
         currentImageHeader.setAlignment(Pos.CENTER);
 
@@ -463,26 +467,28 @@ public class GalleryWindow {
         HBox zoomControls = new HBox(10);
         zoomControls.setAlignment(Pos.CENTER);
 
-        zoomLabel = new Label("100%");
+        zoomLabel = new Label(String.format(messages.getString("gallery.zoom.percent"), 100));
         zoomLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
 
-        resetZoomButton = new Button("Reset Zoom & Pan");
+        resetZoomButton = new Button(messages.getString("gallery.zoom.reset"));
         resetZoomButton.setOnAction(e -> resetZoom());
 
-        zoomControls.getChildren().addAll(new Label("Zoom:"), zoomLabel, resetZoomButton);
+        zoomControls
+                .getChildren()
+                .addAll(new Label(messages.getString("gallery.zoom.label")), zoomLabel, resetZoomButton);
 
         // Navigation controls with pagination buttons
         HBox navControls = new HBox(15);
         navControls.setAlignment(Pos.CENTER);
 
-        prevButton = new Button("◀ Previous");
+        prevButton = new Button(messages.getString("gallery.navigation.previous"));
         prevButton.getStyleClass().add("nav-button");
         prevButton.setOnAction(e -> navigateImage(-1));
 
         pageLabel = new Label("1 / " + images.size());
         pageLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
 
-        nextButton = new Button("Next ▶");
+        nextButton = new Button(messages.getString("gallery.navigation.next"));
         nextButton.getStyleClass().add("nav-button");
         nextButton.setOnAction(e -> navigateImage(1));
 
@@ -496,34 +502,39 @@ public class GalleryWindow {
         updateThumbnailSelection();
 
         // Listen for container size changes to update clipping and canvas
-        fixedImageContainer.heightProperty().addListener((obs, oldVal, newVal) -> {
-            updateImageContainerClip();
-            updateCanvasSize();
-        });
+        fixedImageContainer
+                .heightProperty()
+                .addListener(
+                        (obs, oldVal, newVal) -> {
+                            updateImageContainerClip();
+                            updateCanvasSize();
+                        });
 
-        imageSection.getChildren().addAll(currentImageHeader, fixedImageContainer, zoomControls, navControls);
+        imageSection
+                .getChildren()
+                .addAll(currentImageHeader, fixedImageContainer, zoomControls, navControls);
         return imageSection;
     }
 
-    /**
-     * Updates the clipping rectangle for the image container.
-     */
+    /** Updates the clipping rectangle for the image container. */
     private void updateImageContainerClip() {
-        double width = fixedImageContainer.getWidth() > 0 ? fixedImageContainer.getWidth()
+        double width = fixedImageContainer.getWidth() > 0
+                ? fixedImageContainer.getWidth()
                 : fixedImageContainer.getPrefWidth();
-        double height = fixedImageContainer.getHeight() > 0 ? fixedImageContainer.getHeight()
+        double height = fixedImageContainer.getHeight() > 0
+                ? fixedImageContainer.getHeight()
                 : fixedImageContainer.getPrefHeight();
         javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle(width, height);
         fixedImageContainer.setClip(clip);
     }
 
-    /**
-     * Updates the canvas size to match the container.
-     */
+    /** Updates the canvas size to match the container. */
     private void updateCanvasSize() {
-        double width = fixedImageContainer.getWidth() > 0 ? fixedImageContainer.getWidth()
+        double width = fixedImageContainer.getWidth() > 0
+                ? fixedImageContainer.getWidth()
                 : fixedImageContainer.getPrefWidth();
-        double height = fixedImageContainer.getHeight() > 0 ? fixedImageContainer.getHeight()
+        double height = fixedImageContainer.getHeight() > 0
+                ? fixedImageContainer.getHeight()
                 : fixedImageContainer.getPrefHeight();
         overlayCanvas.setWidth(width);
         overlayCanvas.setHeight(height);
@@ -532,87 +543,90 @@ public class GalleryWindow {
         redrawOverlays();
     }
 
-    /**
-     * Sets up zoom and pan functionality with proper clamping.
-     */
+    /** Sets up zoom and pan functionality with proper clamping. */
     private void setupZoomAndPan() {
         // Mouse wheel zoom - only zoom the image and overlay, not the container
-        fixedImageContainer.setOnScroll(event -> {
-            double deltaY = event.getDeltaY();
-            double oldZoom = zoomFactor;
+        fixedImageContainer.setOnScroll(
+                event -> {
+                    double deltaY = event.getDeltaY();
+                    double oldZoom = zoomFactor;
 
-            if (deltaY < 0) {
-                zoomFactor *= 0.9;
-            } else {
-                zoomFactor *= 1.1;
-            }
+                    if (deltaY < 0) {
+                        zoomFactor *= 0.9;
+                    } else {
+                        zoomFactor *= 1.1;
+                    }
 
-            // Enforce minimum zoom of 1.0 (no zooming below 1.0)
-            zoomFactor = Math.max(1.0, Math.min(5.0, zoomFactor));
+                    // Enforce minimum zoom of 1.0 (no zooming below 1.0)
+                    zoomFactor = Math.max(1.0, Math.min(5.0, zoomFactor));
 
-            // If zoom changed, apply it and re-clamp position
-            if (zoomFactor != oldZoom) {
-                applyZoom();
-                clampImagePosition();
-            }
+                    // If zoom changed, apply it and re-clamp position
+                    if (zoomFactor != oldZoom) {
+                        applyZoom();
+                        clampImagePosition();
+                    }
 
-            event.consume();
-        });
+                    event.consume();
+                });
 
         // Mouse drag for panning - only when zoomed and with proper clamping
         final double[] lastMousePos = new double[2];
-        fixedImageContainer.setOnMousePressed(event -> {
-            lastMousePos[0] = event.getX();
-            lastMousePos[1] = event.getY();
-            if (zoomFactor > 1.0) {
-                fixedImageContainer.setCursor(javafx.scene.Cursor.MOVE);
-            }
-        });
+        fixedImageContainer.setOnMousePressed(
+                event -> {
+                    lastMousePos[0] = event.getX();
+                    lastMousePos[1] = event.getY();
+                    if (zoomFactor > 1.0) {
+                        fixedImageContainer.setCursor(javafx.scene.Cursor.MOVE);
+                    }
+                });
 
-        fixedImageContainer.setOnMouseDragged(event -> {
-            // Only allow panning when zoomed
-            if (zoomFactor <= 1.0)
-                return;
+        fixedImageContainer.setOnMouseDragged(
+                event -> {
+                    // Only allow panning when zoomed
+                    if (zoomFactor <= 1.0)
+                        return;
 
-            // Compute proper drag deltas (don't invert)
-            double dx = event.getX() - lastMousePos[0];
-            double dy = event.getY() - lastMousePos[1];
+                    // Compute proper drag deltas (don't invert)
+                    double dx = event.getX() - lastMousePos[0];
+                    double dy = event.getY() - lastMousePos[1];
 
-            // Apply deltas to current translation
-            double newTranslateX = mainImageView.getTranslateX() + dx;
-            double newTranslateY = mainImageView.getTranslateY() + dy;
+                    // Apply deltas to current translation
+                    double newTranslateX = mainImageView.getTranslateX() + dx;
+                    double newTranslateY = mainImageView.getTranslateY() + dy;
 
-            // Clamp translation to keep image covering viewport
-            newTranslateX = clampTranslation(newTranslateX, true);
-            newTranslateY = clampTranslation(newTranslateY, false);
+                    // Clamp translation to keep image covering viewport
+                    newTranslateX = clampTranslation(newTranslateX, true);
+                    newTranslateY = clampTranslation(newTranslateY, false);
 
-            // Apply clamped translation to both image and overlay
-            mainImageView.setTranslateX(newTranslateX);
-            mainImageView.setTranslateY(newTranslateY);
-            overlayCanvas.setTranslateX(newTranslateX);
-            overlayCanvas.setTranslateY(newTranslateY);
+                    // Apply clamped translation to both image and overlay
+                    mainImageView.setTranslateX(newTranslateX);
+                    mainImageView.setTranslateY(newTranslateY);
+                    overlayCanvas.setTranslateX(newTranslateX);
+                    overlayCanvas.setTranslateY(newTranslateY);
 
-            // Update last mouse position
-            lastMousePos[0] = event.getX();
-            lastMousePos[1] = event.getY();
-        });
+                    // Update last mouse position
+                    lastMousePos[0] = event.getX();
+                    lastMousePos[1] = event.getY();
+                });
 
-        fixedImageContainer.setOnMouseReleased(event -> {
-            fixedImageContainer.setCursor(javafx.scene.Cursor.DEFAULT);
-        });
+        fixedImageContainer.setOnMouseReleased(
+                event -> {
+                    fixedImageContainer.setCursor(javafx.scene.Cursor.DEFAULT);
+                });
 
         // Double-click to reset zoom and pan
-        fixedImageContainer.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
-                resetZoom();
-                event.consume();
-            }
-        });
+        fixedImageContainer.setOnMouseClicked(
+                event -> {
+                    if (event.getClickCount() == 2) {
+                        resetZoom();
+                        event.consume();
+                    }
+                });
     }
 
     /**
      * Clamps translation values to ensure image always covers the viewport.
-     * 
+     *
      * @param translation the proposed translation value
      * @param isX         true for X-axis, false for Y-axis
      * @return clamped translation value
@@ -630,9 +644,11 @@ public class GalleryWindow {
         double scaledHeight = imageHeight * zoomFactor;
 
         // Container dimensions
-        double containerWidth = fixedImageContainer.getWidth() > 0 ? fixedImageContainer.getWidth()
+        double containerWidth = fixedImageContainer.getWidth() > 0
+                ? fixedImageContainer.getWidth()
                 : fixedImageContainer.getPrefWidth();
-        double containerHeight = fixedImageContainer.getHeight() > 0 ? fixedImageContainer.getHeight()
+        double containerHeight = fixedImageContainer.getHeight() > 0
+                ? fixedImageContainer.getHeight()
                 : fixedImageContainer.getPrefHeight();
 
         if (isX) {
@@ -646,9 +662,7 @@ public class GalleryWindow {
         }
     }
 
-    /**
-     * Re-clamps the image position after zoom changes.
-     */
+    /** Re-clamps the image position after zoom changes. */
     private void clampImagePosition() {
         double clampedX = clampTranslation(mainImageView.getTranslateX(), true);
         double clampedY = clampTranslation(mainImageView.getTranslateY(), false);
@@ -659,9 +673,7 @@ public class GalleryWindow {
         overlayCanvas.setTranslateY(clampedY);
     }
 
-    /**
-     * Applies the current zoom factor to the image and overlay.
-     */
+    /** Applies the current zoom factor to the image and overlay. */
     private void applyZoom() {
         // Only scale the image and overlay, not the container
         mainImageView.setScaleX(zoomFactor);
@@ -677,9 +689,7 @@ public class GalleryWindow {
         redrawOverlays();
     }
 
-    /**
-     * Resets zoom to 100% and centers the image.
-     */
+    /** Resets zoom to 100% and centers the image. */
     private void resetZoom() {
         zoomFactor = 1.0;
         // Reset both zoom and pan for image and overlay
@@ -699,9 +709,7 @@ public class GalleryWindow {
         redrawOverlays();
     }
 
-    /**
-     * Redraws the overlay graphics for the current image.
-     */
+    /** Redraws the overlay graphics for the current image. */
     private void redrawOverlays() {
         if (currentImageIndex >= 0 && currentImageIndex < images.size()) {
             Path currentImage = images.get(currentImageIndex);
@@ -710,21 +718,32 @@ public class GalleryWindow {
             SearchResponse searchResponse = getSearchResponseForCurrentImage();
 
             // Clear and redraw overlays
-            overlayCanvas.getGraphicsContext2D().clearRect(0, 0, overlayCanvas.getWidth(), overlayCanvas.getHeight());
+            overlayCanvas
+                    .getGraphicsContext2D()
+                    .clearRect(0, 0, overlayCanvas.getWidth(), overlayCanvas.getHeight());
             if (mainImageView.getImage() != null) {
-                OverlayUtils.drawBoundingBoxes(overlayCanvas.getGraphicsContext2D(), currentImage, searchResponse,
-                        overlayCanvas.getWidth(), overlayCanvas.getHeight(),
-                        mainImageView.getImage().getWidth(), mainImageView.getImage().getHeight());
+                OverlayUtils.drawBoundingBoxes(
+                        overlayCanvas.getGraphicsContext2D(),
+                        currentImage,
+                        searchResponse,
+                        overlayCanvas.getWidth(),
+                        overlayCanvas.getHeight(),
+                        mainImageView.getImage().getWidth(),
+                        mainImageView.getImage().getHeight());
             } else {
-                OverlayUtils.drawBoundingBoxes(overlayCanvas.getGraphicsContext2D(), currentImage, searchResponse,
-                        overlayCanvas.getWidth(), overlayCanvas.getHeight());
+                OverlayUtils.drawBoundingBoxes(
+                        overlayCanvas.getGraphicsContext2D(),
+                        currentImage,
+                        searchResponse,
+                        overlayCanvas.getWidth(),
+                        overlayCanvas.getHeight());
             }
         }
     }
 
     /**
      * Gets the SearchResponse for the current image using role-based mapping.
-     * 
+     *
      * @return SearchResponse for current image or null if not found
      */
     private SearchResponse getSearchResponseForCurrentImage() {
@@ -734,12 +753,11 @@ public class GalleryWindow {
 
         Path currentImage = images.get(currentImageIndex);
         return this.result.getImageAnalysisData().get(currentImage);
-
     }
 
     /**
      * Creates the current image data section.
-     * 
+     *
      * @return VBox containing current image data
      */
     private VBox createCurrentImageDataSection() {
@@ -748,16 +766,14 @@ public class GalleryWindow {
         section.setPrefWidth(240);
         section.setPadding(new Insets(15, 15, 15, 0));
 
-        Label title = new Label("Current Image Data");
+        Label title = new Label(messages.getString("gallery.current.image"));
         title.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
 
         section.getChildren().add(title);
         return section;
     }
 
-    /**
-     * Loads and displays the current image with overlays.
-     */
+    /** Loads and displays the current image with overlays. */
     private void loadCurrentImage() {
         if (currentImageIndex >= 0 && currentImageIndex < images.size()) {
             Path currentImage = images.get(currentImageIndex);
@@ -775,26 +791,36 @@ public class GalleryWindow {
 
             // Draw overlays using SearchResponse data with current image dimensions
             if (mainImageView.getImage() != null) {
-                OverlayUtils.drawBoundingBoxes(overlayCanvas.getGraphicsContext2D(), currentImage, searchResponse,
-                        overlayCanvas.getWidth(), overlayCanvas.getHeight(),
-                        mainImageView.getImage().getWidth(), mainImageView.getImage().getHeight());
+                OverlayUtils.drawBoundingBoxes(
+                        overlayCanvas.getGraphicsContext2D(),
+                        currentImage,
+                        searchResponse,
+                        overlayCanvas.getWidth(),
+                        overlayCanvas.getHeight(),
+                        mainImageView.getImage().getWidth(),
+                        mainImageView.getImage().getHeight());
             } else {
-                OverlayUtils.drawBoundingBoxes(overlayCanvas.getGraphicsContext2D(), currentImage, searchResponse,
-                        overlayCanvas.getWidth(), overlayCanvas.getHeight());
+                OverlayUtils.drawBoundingBoxes(
+                        overlayCanvas.getGraphicsContext2D(),
+                        currentImage,
+                        searchResponse,
+                        overlayCanvas.getWidth(),
+                        overlayCanvas.getHeight());
             }
 
-            Platform.runLater(() -> {
-                // Update current image data section
-                updateCurrentImageDataSection(currentImage, searchResponse);
-                // Update page label
-                updatePageLabel();
-            });
+            Platform.runLater(
+                    () -> {
+                        // Update current image data section
+                        updateCurrentImageDataSection(currentImage, searchResponse);
+                        // Update page label
+                        updatePageLabel();
+                    });
         }
     }
 
     /**
      * Updates the current image data section with SearchResponse data.
-     * 
+     *
      * @param currentImage   the current image path
      * @param searchResponse the SearchResponse data
      */
@@ -804,11 +830,13 @@ public class GalleryWindow {
         section.setPrefWidth(300); // Increased width for more data
         section.setPadding(new Insets(15, 15, 15, 0));
 
-        Label title = new Label("Current Image Data");
+        Label title = new Label(messages.getString("gallery.current.image"));
         title.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
         //
 
-        Label imageNameLabel = new Label("Image: " + currentImage.getFileName().toString());
+        Label imageNameLabel = new Label(
+                String.format(
+                        messages.getString("gallery.image.name"), currentImage.getFileName().toString()));
         imageNameLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666;");
 
         // Full SearchResponse JSON data - make it fill available space
@@ -826,10 +854,11 @@ public class GalleryWindow {
                         .print(searchResponse); // Use default camelCase formatting to match Analysis Data
                 jsonArea.setText(jsonString);
             } else {
-                jsonArea.setText("No analysis data available for this image.");
+                jsonArea.setText(messages.getString("gallery.no.analysis.image"));
             }
         } catch (Exception e) {
-            jsonArea.setText("Error displaying analysis data: " + e.getMessage());
+            jsonArea.setText(
+                    String.format(messages.getString("gallery.error.analysis.display"), e.getMessage()));
         }
 
         section.getChildren().addAll(title, imageNameLabel, jsonArea);
@@ -843,7 +872,7 @@ public class GalleryWindow {
 
     /**
      * Navigates to the next or previous image.
-     * 
+     *
      * @param direction -1 for previous, 1 for next
      */
     private void navigateImage(int direction) {
@@ -857,9 +886,7 @@ public class GalleryWindow {
         }
     }
 
-    /**
-     * Updates the navigation button states.
-     */
+    /** Updates the navigation button states. */
     private void updateNavigationButtons() {
         if (prevButton != null && nextButton != null) {
             prevButton.setDisable(currentImageIndex <= 0);
@@ -867,18 +894,14 @@ public class GalleryWindow {
         }
     }
 
-    /**
-     * Updates the page label.
-     */
+    /** Updates the page label. */
     private void updatePageLabel() {
         if (pageLabel != null) {
             pageLabel.setText((currentImageIndex + 1) + " / " + images.size());
         }
     }
 
-    /**
-     * Updates the thumbnail selection highlighting.
-     */
+    /** Updates the thumbnail selection highlighting. */
     private void updateThumbnailSelection() {
         // Update the thumbnail gallery to highlight the current image
         if (galleryStage.getScene() != null && galleryStage.getScene().getRoot() != null) {
@@ -894,9 +917,7 @@ public class GalleryWindow {
         }
     }
 
-    /**
-     * Closes the gallery window and clears all caches.
-     */
+    /** Closes the gallery window and clears all caches. */
     public void close() {
         if (galleryStage != null) {
             galleryStage.close();

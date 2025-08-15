@@ -28,14 +28,14 @@ import javafx.stage.StageStyle;
 
 /**
  * Main container dialog that orchestrates the pattern building workflow.
- * Provides mode switching between Simple and Advanced pattern builders,
- * coordinates configuration conversion, and handles dialog lifecycle.
+ * Provides mode switching
+ * between Simple and Advanced pattern builders, coordinates configuration
+ * conversion, and handles
+ * dialog lifecycle.
  */
 public class PatternBuilderDialog extends Stage {
 
-    /**
-     * Enumeration of pattern builder modes.
-     */
+    /** Enumeration of pattern builder modes. */
     public enum PatternBuilderMode {
         SIMPLE("Simple", "Visual pattern builder for non-regex users"),
         ADVANCED("Advanced", "Direct regex input for power users");
@@ -92,7 +92,7 @@ public class PatternBuilderDialog extends Stage {
 
     /**
      * Creates a new PatternBuilderDialog with modal behavior.
-     * 
+     *
      * @param inputFolder the input folder from the main screen
      * @param messages    the resource bundle for i18n
      */
@@ -116,9 +116,7 @@ public class PatternBuilderDialog extends Stage {
         loadDefaultPreset();
     }
 
-    /**
-     * Initializes the dialog properties.
-     */
+    /** Initializes the dialog properties. */
     private void initializeDialog() {
         setTitle(messages.getString("pattern.builder.title"));
         initModality(Modality.APPLICATION_MODAL);
@@ -135,9 +133,7 @@ public class PatternBuilderDialog extends Stage {
         centerOnScreen();
     }
 
-    /**
-     * Initializes all UI components.
-     */
+    /** Initializes all UI components. */
     private void initializeComponents() {
         // Mode selector
         modeToggleGroup = new ToggleGroup();
@@ -155,7 +151,7 @@ public class PatternBuilderDialog extends Stage {
         // Pattern builders with input folder
         simplePatternBuilder = new SimplePatternBuilder(inputFolder, messages);
         advancedPatternBuilder = new AdvancedPatternBuilder(inputFolder, messages);
-        
+
         // Set up configuration ready callbacks
         simplePatternBuilder.setOnConfigurationReady(this::handleConfigurationReady);
         advancedPatternBuilder.setOnConfigurationReady(this::handleConfigurationReady);
@@ -175,13 +171,11 @@ public class PatternBuilderDialog extends Stage {
         validationStatusLabel.setFont(Font.font("System", FontWeight.BOLD, 11));
 
         // Preset selector
-        presetSelector = new PresetSelector(presetManager);
+        presetSelector = new PresetSelector(presetManager, messages);
         presetSelector.setCurrentConfigurationSupplier(this::getActiveConfiguration);
     }
 
-    /**
-     * Sets up the main layout structure.
-     */
+    /** Sets up the main layout structure. */
     private void setupLayout() {
         BorderPane root = new BorderPane();
 
@@ -216,14 +210,14 @@ public class PatternBuilderDialog extends Stage {
         Scene scene = new Scene(root);
         scene.getStylesheets().add(getClass().getResource("/tollingvision-theme.css").toExternalForm());
         if (getClass().getResource("/pattern-builder-validation.css") != null) {
-            scene.getStylesheets().add(getClass().getResource("/pattern-builder-validation.css").toExternalForm());
+            scene
+                    .getStylesheets()
+                    .add(getClass().getResource("/pattern-builder-validation.css").toExternalForm());
         }
         setScene(scene);
     }
 
-    /**
-     * Creates the header section with title and mode selector.
-     */
+    /** Creates the header section with title and mode selector. */
     private VBox createHeader() {
         VBox header = new VBox(10);
 
@@ -258,9 +252,7 @@ public class PatternBuilderDialog extends Stage {
         return header;
     }
 
-    /**
-     * Creates the footer section with validation status and buttons.
-     */
+    /** Creates the footer section with validation status and buttons. */
     private HBox createFooter() {
         HBox footer = new HBox(15);
         footer.setAlignment(Pos.CENTER_RIGHT);
@@ -272,7 +264,9 @@ public class PatternBuilderDialog extends Stage {
         // Validation status (left side)
         HBox statusBox = new HBox(10);
         statusBox.setAlignment(Pos.CENTER_LEFT);
-        statusBox.getChildren().addAll(new Label(messages.getString("label.status")), validationStatusLabel);
+        statusBox
+                .getChildren()
+                .addAll(new Label(messages.getString("label.status")), validationStatusLabel);
 
         // Spacer
         Region spacer = new Region();
@@ -291,9 +285,7 @@ public class PatternBuilderDialog extends Stage {
         return footer;
     }
 
-    /**
-     * Sets up event handlers for UI interactions.
-     */
+    /** Sets up event handlers for UI interactions. */
     private void setupEventHandlers() {
         // Mode selection
         simpleModeButton.setOnAction(e -> setMode(PatternBuilderMode.SIMPLE));
@@ -308,33 +300,39 @@ public class PatternBuilderDialog extends Stage {
 
         // Preset selector events
         presetSelector.setOnPresetSelected(this::loadPresetConfiguration);
-        presetSelector.setOnPresetSaved(preset -> {
-            // Preset was saved, refresh the selector
-            presetSelector.refreshPresets();
-        });
+        presetSelector.setOnPresetSaved(
+                preset -> {
+                    // Preset was saved, refresh the selector
+                    presetSelector.refreshPresets();
+                });
     }
 
-    /**
-     * Sets up data bindings between components.
-     */
+    /** Sets up data bindings between components. */
     private void setupBindings() {
         // Update mode description when mode changes
-        currentMode.addListener((obs, oldMode, newMode) -> {
-            if (newMode != null) {
-                modeDescriptionLabel.setText(newMode.getDescription());
-                updateModeSelection(newMode);
-            }
-        });
+        currentMode.addListener(
+                (obs, oldMode, newMode) -> {
+                    if (newMode != null) {
+                        switch (newMode) {
+                            case SIMPLE ->
+                                modeDescriptionLabel.setText(
+                                        messages.getString("pattern.builder.mode.simple.description"));
+                            case ADVANCED ->
+                                modeDescriptionLabel.setText(
+                                        messages.getString("pattern.builder.mode.advanced.description"));
+                        }
+                        updateModeSelection(newMode);
+                    }
+                });
 
         // Update validation status based on current configuration
-        currentConfig.addListener((obs, oldConfig, newConfig) -> {
-            updateValidationStatus();
-        });
+        currentConfig.addListener(
+                (obs, oldConfig, newConfig) -> {
+                    updateValidationStatus();
+                });
     }
 
-    /**
-     * Sets the current pattern builder mode.
-     */
+    /** Sets the current pattern builder mode. */
     private void setMode(PatternBuilderMode mode) {
         if (mode == currentMode.get()) {
             return;
@@ -358,9 +356,10 @@ public class PatternBuilderDialog extends Stage {
 
                 // Show custom token dialog when switching to Simple mode for the first time
                 if (oldMode == PatternBuilderMode.ADVANCED) {
-                    javafx.application.Platform.runLater(() -> {
-                        simplePatternBuilder.showCustomTokenDialogIfNeeded();
-                    });
+                    javafx.application.Platform.runLater(
+                            () -> {
+                                simplePatternBuilder.showCustomTokenDialogIfNeeded();
+                            });
                 }
             }
             case ADVANCED -> {
@@ -379,13 +378,10 @@ public class PatternBuilderDialog extends Stage {
 
         updateValidationStatus();
 
-        ValidationLogger.logUserAction("Mode switched",
-                String.format("%s → %s", oldMode, mode));
+        ValidationLogger.logUserAction("Mode switched", String.format("%s → %s", oldMode, mode));
     }
 
-    /**
-     * Updates the mode selection UI.
-     */
+    /** Updates the mode selection UI. */
     private void updateModeSelection(PatternBuilderMode mode) {
         switch (mode) {
             case SIMPLE -> simpleModeButton.setSelected(true);
@@ -393,9 +389,7 @@ public class PatternBuilderDialog extends Stage {
         }
     }
 
-    /**
-     * Preserves shared state between modes (directory, extension settings).
-     */
+    /** Preserves shared state between modes (directory, extension settings). */
     private void preserveSharedState() {
         switch (currentMode.get()) {
             case SIMPLE -> {
@@ -410,9 +404,7 @@ public class PatternBuilderDialog extends Stage {
         }
     }
 
-    /**
-     * Restores shared state to the new mode.
-     */
+    /** Restores shared state to the new mode. */
     private void restoreSharedState() {
         switch (currentMode.get()) {
             case SIMPLE -> {
@@ -428,9 +420,7 @@ public class PatternBuilderDialog extends Stage {
         }
     }
 
-    /**
-     * Converts configuration to simple mode representation.
-     */
+    /** Converts configuration to simple mode representation. */
     private void convertToSimpleMode(PatternConfiguration config, PatternBuilderMode fromMode) {
         if (config == null) {
             return;
@@ -442,13 +432,10 @@ public class PatternBuilderDialog extends Stage {
         // For now, we preserve the configuration object
         currentConfig.set(config);
 
-        ValidationLogger.logConfigurationChange("Mode conversion",
-                fromMode.name(), "SIMPLE");
+        ValidationLogger.logConfigurationChange("Mode conversion", fromMode.name(), "SIMPLE");
     }
 
-    /**
-     * Converts configuration to advanced mode representation.
-     */
+    /** Converts configuration to advanced mode representation. */
     private void convertToAdvancedMode(PatternConfiguration config, PatternBuilderMode fromMode) {
         if (config == null) {
             config = new PatternConfiguration();
@@ -458,13 +445,10 @@ public class PatternBuilderDialog extends Stage {
         advancedPatternBuilder.setConfiguration(config);
         currentConfig.set(config);
 
-        ValidationLogger.logConfigurationChange("Mode conversion",
-                fromMode.name(), "ADVANCED");
+        ValidationLogger.logConfigurationChange("Mode conversion", fromMode.name(), "ADVANCED");
     }
 
-    /**
-     * Gets the current configuration from the active pattern builder.
-     */
+    /** Gets the current configuration from the active pattern builder. */
     private PatternConfiguration getActiveConfiguration() {
         return switch (currentMode.get()) {
             case SIMPLE -> simplePatternBuilder.generateConfiguration();
@@ -472,14 +456,13 @@ public class PatternBuilderDialog extends Stage {
         };
     }
 
-    /**
-     * Updates the validation status display.
-     */
+    /** Updates the validation status display. */
     private void updateValidationStatus() {
         PatternConfiguration config = getActiveConfiguration();
 
         if (config == null) {
-            validationStatusLabel.setText("No configuration");
+            validationStatusLabel.setText(
+                    messages.getString("validation.status.configuration.incomplete"));
             validationStatusLabel.setTextFill(Color.GRAY);
             okButton.setDisable(true);
             return;
@@ -490,32 +473,32 @@ public class PatternBuilderDialog extends Stage {
 
         if (result.isValid()) {
             if (result.hasWarnings()) {
-                validationStatusLabel.setText("Valid with warnings (" + result.getWarnings().size() + ")");
+                validationStatusLabel.setText(
+                        String.format(
+                                messages.getString("status.configuration.valid.warnings"),
+                                result.getWarnings().size()));
                 validationStatusLabel.setTextFill(Color.ORANGE);
             } else {
-                validationStatusLabel.setText("Configuration valid");
+                validationStatusLabel.setText(messages.getString("status.configuration.valid"));
                 validationStatusLabel.setTextFill(Color.GREEN);
             }
             okButton.setDisable(false);
         } else {
-            validationStatusLabel.setText("Validation errors (" + result.getErrors().size() + ")");
+            validationStatusLabel.setText(
+                    String.format(messages.getString("status.validation.errors"), result.getErrors().size()));
             validationStatusLabel.setTextFill(Color.RED);
             okButton.setDisable(true);
         }
     }
 
-    /**
-     * Validates a pattern configuration.
-     */
+    /** Validates a pattern configuration. */
     private ValidationResult validateConfiguration(PatternConfiguration config) {
         // Use the pattern generator for validation
         PatternGenerator generator = new PatternGenerator();
         return generator.validatePatterns(config);
     }
 
-    /**
-     * Handles the OK button action.
-     */
+    /** Handles the OK button action. */
     private void handleOkAction() {
         PatternConfiguration config = getActiveConfiguration();
 
@@ -535,30 +518,29 @@ public class PatternBuilderDialog extends Stage {
         }
     }
 
-    /**
-     * Handles the Cancel button action.
-     */
+    /** Handles the Cancel button action. */
     private void handleCancelAction() {
         close();
     }
 
-    /**
-     * Shows validation errors in a dialog.
-     */
+    /** Shows validation errors in a dialog. */
     private void showValidationErrors(ValidationResult result) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Validation Errors");
-        alert.setHeaderText("Pattern configuration has errors");
+        alert.setTitle(messages.getString("validation.dialog.title"));
+        alert.setHeaderText(messages.getString("validation.dialog.header"));
 
         StringBuilder content = new StringBuilder();
-        content.append("Please fix the following errors before proceeding:\n\n");
+        content.append(messages.getString("validation.dialog.intro")).append("\n\n");
 
         for (ValidationError error : result.getErrors()) {
             content.append("• ").append(error.getMessage()).append("\n");
         }
 
         if (result.hasWarnings()) {
-            content.append("\nWarnings:\n");
+            content
+                    .append("\n")
+                    .append(messages.getString("validation.dialog.warnings.header"))
+                    .append("\n");
             for (ValidationWarning warning : result.getWarnings()) {
                 content.append("• ").append(warning.getMessage()).append("\n");
             }
@@ -570,7 +552,7 @@ public class PatternBuilderDialog extends Stage {
 
     /**
      * Shows the dialog with the specified initial configuration.
-     * 
+     *
      * @param initialConfig the initial pattern configuration
      */
     public void showDialog(PatternConfiguration initialConfig) {
@@ -595,47 +577,49 @@ public class PatternBuilderDialog extends Stage {
 
     /**
      * Sets the callback to be invoked when configuration is complete.
-     * 
+     *
      * @param callback the configuration completion callback
      */
     public void setOnConfigurationComplete(Consumer<PatternConfiguration> callback) {
         this.onConfigurationComplete = callback;
     }
-    
+
     /**
-     * Sets the configuration ready callback.
-     * Called immediately when a valid configuration is generated in either mode.
-     * 
+     * Sets the configuration ready callback. Called immediately when a valid
+     * configuration is
+     * generated in either mode.
+     *
      * @param callback the configuration ready callback
      */
     public void setOnConfigurationReady(Consumer<PatternConfiguration> callback) {
         this.onConfigurationReady = callback;
     }
-    
+
     /**
-     * Handles when a configuration is ready from either mode.
-     * Updates the current configuration and enables the OK button.
-     * 
+     * Handles when a configuration is ready from either mode. Updates the current
+     * configuration and
+     * enables the OK button.
+     *
      * @param config the ready configuration
      */
     private void handleConfigurationReady(PatternConfiguration config) {
         currentConfig.set(config);
-        
+
         // Enable OK button when configuration is valid
         okButton.setDisable(false);
-        
+
         // Call the external callback if set
         if (onConfigurationReady != null) {
             onConfigurationReady.accept(config);
         }
-        
+
         // Update validation status
         updateValidationStatus();
     }
 
     /**
      * Gets the current pattern builder mode.
-     * 
+     *
      * @return the current mode
      */
     public PatternBuilderMode getCurrentMode() {
@@ -644,7 +628,7 @@ public class PatternBuilderDialog extends Stage {
 
     /**
      * Gets the current pattern configuration.
-     * 
+     *
      * @return the current configuration
      */
     public PatternConfiguration getCurrentConfiguration() {
@@ -653,7 +637,7 @@ public class PatternBuilderDialog extends Stage {
 
     /**
      * Property for the current mode (for binding).
-     * 
+     *
      * @return the current mode property
      */
     public ObjectProperty<PatternBuilderMode> currentModeProperty() {
@@ -662,16 +646,14 @@ public class PatternBuilderDialog extends Stage {
 
     /**
      * Property for the current configuration (for binding).
-     * 
+     *
      * @return the current configuration property
      */
     public ObjectProperty<PatternConfiguration> currentConfigurationProperty() {
         return currentConfig;
     }
 
-    /**
-     * Loads the default preset configuration on startup.
-     */
+    /** Loads the default preset configuration on startup. */
     private void loadDefaultPreset() {
         PresetConfiguration defaultPreset = presetManager.getDefaultPreset();
         if (defaultPreset != null) {
@@ -682,7 +664,7 @@ public class PatternBuilderDialog extends Stage {
 
     /**
      * Loads a preset configuration into the dialog.
-     * 
+     *
      * @param preset the preset to load
      */
     private void loadPresetConfiguration(PresetConfiguration preset) {
@@ -712,20 +694,20 @@ public class PatternBuilderDialog extends Stage {
 
     /**
      * Checks if a configuration has complex patterns that require advanced mode.
-     * 
+     *
      * @param config the configuration to check
      * @return true if the configuration has complex patterns
      */
     private boolean hasComplexPatterns(PatternConfiguration config) {
-        return (config.getGroupPattern() != null && !config.getGroupPattern().isEmpty()) ||
-                (config.getFrontPattern() != null && !config.getFrontPattern().isEmpty()) ||
-                (config.getRearPattern() != null && !config.getRearPattern().isEmpty()) ||
-                (config.getOverviewPattern() != null && !config.getOverviewPattern().isEmpty());
+        return (config.getGroupPattern() != null && !config.getGroupPattern().isEmpty())
+                || (config.getFrontPattern() != null && !config.getFrontPattern().isEmpty())
+                || (config.getRearPattern() != null && !config.getRearPattern().isEmpty())
+                || (config.getOverviewPattern() != null && !config.getOverviewPattern().isEmpty());
     }
 
     /**
      * Gets the preset manager for external access.
-     * 
+     *
      * @return the preset manager
      */
     public PresetManager getPresetManager() {
@@ -734,7 +716,7 @@ public class PatternBuilderDialog extends Stage {
 
     /**
      * Gets the preset selector component.
-     * 
+     *
      * @return the preset selector
      */
     public PresetSelector getPresetSelector() {
@@ -742,8 +724,9 @@ public class PatternBuilderDialog extends Stage {
     }
 
     /**
-     * Cleanup method to shut down background processing.
-     * Task 12: Updated to use new cleanup methods for performance optimization resources.
+     * Cleanup method to shut down background processing. Task 12: Updated to use
+     * new cleanup methods
+     * for performance optimization resources.
      */
     public void shutdown() {
         if (simplePatternBuilder != null) {

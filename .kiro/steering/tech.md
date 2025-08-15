@@ -62,7 +62,7 @@
 
 ## Platform-Specific Notes
 - **Windows**: Generates `.exe` installer
-- **macOS**: Generates `.dmg` installer  
+- **macOS**: Generates `.dmg` installer
 - **Linux**: Generates `.deb` installer (default)
 - Memory allocation: 512 MB heap default
 - Lightweight application without heavy native dependencies

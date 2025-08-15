@@ -68,7 +68,7 @@ private void setupNavigation() {
             }
         }
     });
-    
+
     previousButton.setOnAction(e -> {
         if (currentStep > 0) {
             currentStep--;
@@ -91,7 +91,7 @@ Implemented `showStep()` method that:
 Each step now shows appropriate content:
 - **Step 0**: FileAnalysisPane for file analysis
 - **Step 1**: TokenSelectionPane + ValidationMessageBox for token selection
-- **Step 2**: GroupIdSelector + ValidationMessageBox for group ID selection  
+- **Step 2**: GroupIdSelector + ValidationMessageBox for group ID selection
 - **Step 3**: RoleRulesPane + ValidationMessageBox + PatternPreviewPane for role rules and preview
 
 ### 7. Enhanced Data Binding

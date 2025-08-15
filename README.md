@@ -40,7 +40,7 @@ TollingVision JavaFX Client uploads grouped vehicle images (front, rear, overvie
 - **No Heavy Dependencies**: Removed OpenCV and Jackson for lightweight deployment
 - **Protobuf-First**: All JSON serialization uses Protobuf JsonFormat
 - **Pure Java Implementation**: All overlay rendering done with JavaFX Canvas
-- **Memory Efficient**: 512 MB heap default with minimal footprint  
+- **Memory Efficient**: 512 MB heap default with minimal footprint
 
 ## Quick Start
 
@@ -209,7 +209,7 @@ message SearchRequest {
 
 ### Platform-Specific Packaging
 - **Windows**: Generates `.exe` installer
-- **macOS**: Generates `.dmg` installer  
+- **macOS**: Generates `.dmg` installer
 - **Linux**: Generates `.deb` installer (default)
 
 ## Performance & Requirements
@@ -227,7 +227,7 @@ message SearchRequest {
 ## Target Users
 
 - Traffic enforcement agencies
-- Tolling system operators  
+- Tolling system operators
 - Vehicle monitoring services
 - Organizations requiring automated license plate and vehicle recognition
 

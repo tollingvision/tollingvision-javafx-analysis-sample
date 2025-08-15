@@ -36,7 +36,7 @@ src/main/java/
 - **Module System**: Enabled (fully modular Java application)
 - **Module Name**: `analysis.sample`
 - **Main Class**: `com.smartcloudsolutions.tollingvision.samples.AnalysisSampleApp`
-- **Package Structure**: 
+- **Package Structure**:
   - `com.smartcloudsolutions.tollingvision.samples` (main application)
   - `com.smartcloudsolutions.tollingvision.samples.model` (data models)
   - `com.smartcloudsolutions.tollingvision.samples.ui` (UI components)

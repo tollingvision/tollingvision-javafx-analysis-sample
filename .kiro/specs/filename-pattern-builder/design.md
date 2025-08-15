@@ -59,7 +59,7 @@ public class PatternBuilderDialog extends Stage {
     private PatternBuilderMode currentMode;
     private PatternConfiguration currentConfig;
     private Consumer<PatternConfiguration> onConfigurationComplete;
-    
+
     public void showDialog(PatternConfiguration initialConfig);
     public void setOnConfigurationComplete(Consumer<PatternConfiguration> callback);
 }
@@ -83,7 +83,7 @@ public class SimplePatternBuilder extends VBox {
     private ObservableList<FilenameToken> detectedTokens;
     private ObjectProperty<FilenameToken> selectedGroupId;
     private ObservableList<RoleRule> roleRules;
-    
+
     public void analyzeSampleFiles(Path sampleDirectory);
     public PatternConfiguration generateConfiguration();
 }
@@ -167,7 +167,7 @@ public class PatternPreviewPane extends VBox {
     private TableView<FilenamePreview> previewTable;
     private Label summaryLabel;
     private ListView<String> unmatchedFiles;
-    
+
     public void updatePreview(PatternConfiguration config, List<String> filenames);
     public PreviewSummary getPreviewSummary();
 }
@@ -291,14 +291,14 @@ public class TestDataSets {
         "vehicle_001_front.jpg", "vehicle_001_rear.jpg", "vehicle_001_overview.jpg",
         "vehicle_002_front.jpg", "vehicle_002_rear.jpg", "vehicle_002_overview.jpg"
     );
-    
+
     // Complex naming with dates and cameras
     public static final List<String> COMPLEX_VEHICLE_NAMES = Arrays.asList(
         "2024-01-15_cam1_vehicle_ABC123_front.jpg",
         "2024-01-15_cam1_vehicle_ABC123_rear.jpg",
         "2024-01-15_cam2_vehicle_ABC123_scene.jpg"
     );
-    
+
     // Edge cases and problematic patterns
     public static final List<String> EDGE_CASE_NAMES = Arrays.asList(
         "IMG_001.jpg", "DSC_002.JPG", "photo.png",
@@ -334,7 +334,7 @@ The Pattern Builder integrates with the existing MainScreen through a new "Patte
 // In MainScreen.java
 private void openPatternBuilder() {
     PatternBuilderDialog dialog = new PatternBuilderDialog(inputFolder, messages);
-    
+
     // Set up real-time configuration callback
     dialog.setOnConfigurationReady(config -> {
         // Update existing pattern fields immediately when valid
@@ -343,13 +343,13 @@ private void openPatternBuilder() {
         rearPatternField.setText(config.getRearPattern());
         overviewPatternField.setText(config.getOverviewPattern());
     });
-    
+
     // Set up completion callback for dialog close
     dialog.setOnConfigurationComplete(config -> {
         // Final save when user clicks OK
         saveConfiguration();
     });
-    
+
     // Initialize with current patterns
     PatternConfiguration currentConfig = getCurrentPatternConfiguration();
     dialog.showDialog(currentConfig);
@@ -365,10 +365,10 @@ public class CustomTokenManager {
     // Persistence using simple text format
     public void saveCustomTokens(); // Saves to ~/.tollingvision-client/custom-tokens.txt
     public void loadCustomTokens(); // Loads on startup
-    
+
     // Real-time updates with callback
     public void updateCustomToken(String oldName, CustomToken token, Runnable refreshCallback);
-    
+
     // Graceful collision handling
     public CustomToken findMatchingCustomToken(String tokenValue);
 }
@@ -398,11 +398,11 @@ The system now provides immediate feedback and state synchronization:
 public class ValidationModel {
     // Debounced validation with 300ms delay
     public void requestValidationRefresh();
-    
+
     // Empty state handling
     public boolean shouldHideValidationDisplay();
     public boolean shouldShowSuccessBanner();
-    
+
     // Configuration readiness
     public boolean canGeneratePatterns();
 }
@@ -410,7 +410,7 @@ public class ValidationModel {
 public class PatternBuilderDialog {
     // Real-time configuration publishing
     private Consumer<PatternConfiguration> onConfigurationReady;
-    
+
     // Immediate OK button state management
     private void handleConfigurationReady(PatternConfiguration config);
 }
@@ -424,10 +424,10 @@ Rule suggestions now include intelligent deduplication and empty state handling:
 public class RoleRulesPane {
     // Deduplication logic
     public void suggestRulesFromTokens(List<FilenameToken> detectedTokens);
-    
+
     // Empty state management
     private void hideSuggestions(); // Hides panel entirely when no suggestions
-    
+
     // Real-time refresh
     public void refreshSuggestions(List<FilenameToken> detectedTokens);
 }
