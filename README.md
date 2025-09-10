@@ -253,4 +253,4 @@ This project is part of the TollingVision ecosystem. Please refer to your Tollin
 
 ## Support
 
-For technical support and documentation, please contact Smart Cloud Solutions or refer to the TollingVision API documentation.
+For technical support and documentation, please refer to the TollingVision API documentation.
