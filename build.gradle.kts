@@ -3,25 +3,25 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
     application
     id("org.openjfx.javafxplugin") version "0.1.0"
-    id("org.beryx.jlink")          version "3.1.1"
-    id("com.diffplug.spotless") version "6.25.0"
+    id("org.beryx.jlink")          version "3.1.3"
+    id("com.diffplug.spotless") version "8.0.0"
 }
 
 dependencies {
-    implementation(platform("io.grpc:grpc-bom:1.73.0"))
+    implementation(platform("io.grpc:grpc-bom:1.76.0"))
 
-    implementation(platform("io.netty:netty-bom:4.2.2.Final"))
-    implementation(platform("com.google.cloud:libraries-bom:26.62.0"))
+    implementation(platform("io.netty:netty-bom:4.2.7.Final"))
+    implementation(platform("com.google.cloud:libraries-bom:26.70.0"))
 
     implementation("io.grpc:grpc-netty")
-    implementation("com.smart-cloud-solutions:tollingvision:2.6.1")
+    implementation("com.smart-cloud-solutions:tollingvision:2.6.2")
 
-    runtimeOnly("com.google.protobuf:protobuf-java:4.31.1")
-    implementation("com.google.protobuf:protobuf-java-util:4.31.1")
-    runtimeOnly("com.google.errorprone:error_prone_annotations:2.38.0")
+    runtimeOnly("com.google.protobuf:protobuf-java:4.33.0")
+    implementation("com.google.protobuf:protobuf-java-util:4.33.0")
+    runtimeOnly("com.google.errorprone:error_prone_annotations:2.43.0")
     
     // Testing dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
